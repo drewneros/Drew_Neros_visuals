@@ -31,6 +31,8 @@ function initClaudeAPI() {
         messages = opts.messages;
         if (opts.model) model = opts.model;
         if (opts.max_tokens) max_tokens = opts.max_tokens;
+      } else {
+        throw new Error("claude.complete: opts must be a string or have a .messages array");
       }
       const res = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
@@ -200,7 +202,7 @@ function StepAuth({ onClose, onAuthed }) {
           </button>
           <button type="button" onClick={onAuthed}
             className="meta" style={{ color: "var(--fg-faint)", textAlign: "center", padding: "4px 0" }}>
-            Skip — enter without AI features
+            Skip for now
           </button>
         </form>
       </div>
@@ -615,18 +617,21 @@ function StepReview({ files, setFiles, onNext }) {
   const reanalyze = async () => {
     if (reanalyzing) return;
     setReanalyzing(true);
-    const updated = [...files];
-    const cats = window.CATEGORIES.map(c => c.id);
-    for (let i = 0; i < updated.length; i += 4) {
-      const idxs = Array.from({ length: Math.min(4, updated.length - i) }, (_, j) => i + j);
-      await Promise.all(idxs.map(async (idx) => {
-        const result = await window.classifyImageAI(updated[idx], cats);
-        updated[idx] = { ...updated[idx], cat: result.cat, confidence: result.confidence, edited: false,
-          shot: updated[idx].shot ? { ...updated[idx].shot, cat: result.cat } : null };
-      }));
-      setFiles([...updated]);
+    try {
+      const updated = [...files];
+      const cats = window.CATEGORIES.map(c => c.id);
+      for (let i = 0; i < updated.length; i += 4) {
+        const idxs = Array.from({ length: Math.min(4, updated.length - i) }, (_, j) => i + j);
+        await Promise.all(idxs.map(async (idx) => {
+          const result = await window.classifyImageAI(updated[idx], cats);
+          updated[idx] = { ...updated[idx], cat: result.cat, confidence: result.confidence, edited: false,
+            shot: updated[idx].shot ? { ...updated[idx].shot, cat: result.cat } : null };
+        }));
+        setFiles([...updated]);
+      }
+    } finally {
+      setReanalyzing(false);
     }
-    setReanalyzing(false);
   };
 
   const moved = files.filter((f) => f.edited).length;

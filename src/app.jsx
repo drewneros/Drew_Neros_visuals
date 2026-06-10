@@ -90,7 +90,26 @@ function App(){
       {adminOpen && <AdminFlow onClose={() => setAdminOpen(false)} />}
 
       <Tweaks tweaks={tweaks} setTweak={setTweak}/>
+
+      {/* Invisible tap zone bottom-right — triple-tap opens admin on mobile */}
+      <MobileAdminTrigger onOpen={() => setAdminOpen(true)}/>
     </>
+  );
+}
+
+function MobileAdminTrigger({ onOpen }) {
+  const tapsRef = _auc(() => ({ count: 0, timer: null }), []);
+  const onTap = () => {
+    tapsRef.count += 1;
+    clearTimeout(tapsRef.timer);
+    if (tapsRef.count >= 3) { tapsRef.count = 0; onOpen(); return; }
+    tapsRef.timer = setTimeout(() => { tapsRef.count = 0; }, 600);
+  };
+  return (
+    <div onTouchEnd={onTap} style={{
+      position: "fixed", bottom: 0, right: 0,
+      width: 48, height: 48, zIndex: 50,
+    }}/>
   );
 }
 

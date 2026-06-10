@@ -473,7 +473,9 @@ async function classifyImageAI(file, catIds) {
         const match = (catIds || []).find(id => result === id || result.includes(id));
         if (match) return { cat: match, confidence: 0.93 };
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn("classifyImageAI API error:", e && e.message || e);
+    }
   }
 
   // Filename heuristics fallback
