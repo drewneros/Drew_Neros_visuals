@@ -407,6 +407,95 @@ async function _imageToBase64(src, maxDim = 768){
   }
 }
 
+async function classifyImageAI(file, catIds) {
+  const prompt = [
+    "You are classifying photography for a professional photographer's portfolio. Look at this image carefully and assign it to exactly one category.",
+    "Reply with ONLY the category id — one word/phrase, nothing else.",
+    "",
+    "CATEGORY DEFINITIONS:",
+    "",
+    "fashion-editorial",
+    "  The image IS the art. High-concept, styled, magazine-worthy. Model wears curated, intentional outfits.",
+    "  Dramatic lighting, editorial composition, props, or conceptual framing. Feels like a fashion spread or cover.",
+    "  Could be studio or location. The styling and visual story are the point.",
+    "",
+    "portraits",
+    "  The person as themselves — not styled for fashion, not for a brand, not for an agency file.",
+    "  Intimate, personal. Viewer connects with the subject as a human. Could be close-up or environmental.",
+    "  NOT a fashion shoot. NOT a casting shot. The person's identity is the subject.",
+    "",
+    "models",
+    "  Agency digitals / casting shots / polaroid-style tests. Very clean neutral or white background.",
+    "  Model wears simple, plain, everyday clothing (white tee, jeans, no styling).",
+    "  Poses are standard: front-facing, 3/4 turn, profile, full-length — meant for agency submission.",
+    "  No dramatic lighting, no concept. Just the person clearly documented.",
+    "",
+    "ecommerce",
+    "  A specific garment or accessory IS the product being sold. Shot to show the item for retail.",
+    "  Person is a 'hanger' for the clothing — clean, consistent, often white/light background.",
+    "  Multiple identical-style frames of different SKUs. Functional, not artistic.",
+    "",
+    "lifestyle",
+    "  Candid, documentary, or brand-storytelling. The environment and context matter as much as the person.",
+    "  Behind-the-scenes, on-set moments, daily life, people in real situations.",
+    "  NOT posed for commercial fashion. Feels observed, not directed.",
+    "",
+    "product",
+    "  NO PEOPLE as the main subject. Objects only: bottles, bags, shoes (no person), jewelry, food, props.",
+    "  Tabletop, flat lay, still life, macro. The thing is the subject, not a person wearing/holding it.",
+    "  If a hand or person appears only incidentally to hold an object, still classify as product.",
+    "",
+    "DECISION RULES (apply in order):",
+    "1. If the main subject is an inanimate object (no person, or person is incidental) → product",
+    "2. If a person is wearing simple clothes on a plain/white background with standard poses → models",
+    "3. If a person is wearing clothes shown for retail sale with clean consistent style → ecommerce",
+    "4. If a person is photographed as themselves with no commercial/fashion intent → portraits",
+    "5. If it has the feel of candid documentary or brand storytelling → lifestyle",
+    "6. If it's high-concept, styled, editorial, artistic fashion → fashion-editorial",
+    "",
+    "Reply with one of: fashion-editorial, portraits, models, ecommerce, lifestyle, product",
+  ].join("\n");
+
+  if (file.previewUrl && window.claude && window.claude.complete) {
+    try {
+      const encoded = await _imageToBase64(file.previewUrl, 512);
+      if (encoded) {
+        const text = await window.claude.complete({
+          messages: [{
+            role: "user",
+            content: [
+              { type: "image", source: { type: "base64", media_type: encoded.mediaType, data: encoded.data } },
+              { type: "text", text: prompt },
+            ],
+          }],
+        });
+        const result = String(text || "").trim().toLowerCase().replace(/[^a-z-]/g, "");
+        const match = (catIds || []).find(id => result === id || result.includes(id));
+        if (match) return { cat: match, confidence: 0.93 };
+      }
+    } catch (e) {}
+  }
+
+  // Filename heuristics fallback
+  const name = (file.name || "").toLowerCase();
+  const hints = [
+    { words: ["product", "bottle", "still", "tabletop", "macro", "texture", "object", "prop", "glass"], cat: "product" },
+    { words: ["model", "digital", "polaroid", "test", "casting", "comp"], cat: "models" },
+    { words: ["editorial", "fashion", "vogue", "lookbook", "cover", "styling", "look_"], cat: "fashion-editorial" },
+    { words: ["portrait", "headshot", "face", "head", "self"], cat: "portraits" },
+    { words: ["ecomm", "sku", "on-figure", "retail"], cat: "ecommerce" },
+    { words: ["lifestyle", "bts", "behind", "candid", "street", "on-set", "onset"], cat: "lifestyle" },
+  ];
+  for (const { words, cat } of hints) {
+    if (words.some(w => name.includes(w))) return { cat, confidence: 0.70 };
+  }
+
+  const cats = catIds || window.CATEGORIES.map(c => c.id);
+  return { cat: cats[Math.floor(Math.random() * cats.length)], confidence: 0.52 };
+}
+
+window.classifyImageAI = classifyImageAI;
+
 async function generateAltAI(fileOrShot){
   const file = fileOrShot && fileOrShot.shot ? fileOrShot : null;
   const shot = file ? file.shot : fileOrShot;

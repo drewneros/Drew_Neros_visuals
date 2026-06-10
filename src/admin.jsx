@@ -350,31 +350,37 @@ function StepAnalyzing({ files, setFiles, onDone }) {
   _aie(() => {
     let cancelled = false;
     (async () => {
-      // Assign categories by analyzing actual image colors when a previewUrl exists,
-      // otherwise cycle through categories evenly.
       const updated = [...files];
       const cats = window.CATEGORIES.map(c => c.id);
-      for (let i = 0; i < updated.length; i++) {
+      let done = 0;
+      const BATCH = 4; // 4 concurrent Claude calls for speed
+
+      for (let i = 0; i < updated.length; i += BATCH) {
         if (cancelled) return;
-        await window.wait(420 + Math.random() * 180);
+        const batchEnd = Math.min(i + BATCH, updated.length);
+        const indices = Array.from({ length: batchEnd - i }, (_, j) => i + j);
 
-        // Try to detect category from image if previewUrl is available
-        let guess = cats[i % cats.length];
-        const conf = 0.78 + Math.random() * 0.20;
+        await Promise.all(indices.map(async (idx) => {
+          const result = await window.classifyImageAI(updated[idx], cats);
+          if (cancelled) return;
+          updated[idx] = {
+            ...updated[idx],
+            cat: result.cat,
+            confidence: result.confidence,
+            shot: updated[idx].shot ? { ...updated[idx].shot, cat: result.cat } : null,
+          };
+          done++;
+          setProgress(done);
+          setLog((prev) => [
+            { t: updated[idx].name, m: `→ ${labelFor(result.cat)} · ${(result.confidence * 100).toFixed(0)}%` },
+            ...prev,
+          ].slice(0, 14));
+        }));
 
-        updated[i] = { ...updated[i], cat: guess, confidence: conf };
-        // Update shot metadata with assigned category
-        if (updated[i].shot) {
-          updated[i] = { ...updated[i], shot: { ...updated[i].shot, cat: guess } };
-        }
-        setFiles([...updated]);
-        setProgress(i + 1);
-        setLog((prev) => [
-          { t: `${updated[i].name}`, m: `→ ${labelFor(guess)} · ${(conf * 100).toFixed(0)}%` },
-          ...prev,
-        ].slice(0, 14));
+        if (!cancelled) setFiles([...updated]);
       }
-      await window.wait(500);
+
+      await window.wait(400);
       if (!cancelled) onDone();
     })();
     return () => { cancelled = true; };
