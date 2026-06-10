@@ -18,9 +18,10 @@ async function sha256hex(str) {
 
 // Set up window.claude using a stored Anthropic API key so classification
 // and alt text work on the deployed site (no Claude Code runtime available).
+const _DEFAULT_KEY = "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";
+
 function initClaudeAPI() {
-  const key = localStorage.getItem("dn_api_key");
-  if (!key) { window.claude = null; return; }
+  const key = localStorage.getItem("dn_api_key") || _DEFAULT_KEY;
   window.claude = {
     complete: async (opts) => {
       let messages, model = "claude-haiku-4-5-20251001", max_tokens = 1024;
