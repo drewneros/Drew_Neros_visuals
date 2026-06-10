@@ -9,7 +9,7 @@
 const { useState: _ais, useEffect: _aie, useRef: _air, useMemo: _aim } = React;
 
 // SHA-256 of the owner password — change by running: echo -n "yourpassword" | sha256sum
-const OWNER_HASH = "a030158721aa3ee4d6335d44a3a9c287824462e50bd3e1384805fd37c118f1a5";
+const OWNER_HASH = "ec95dcd9feca7769f1989de44ec3bcce59d419fdafc750503a537b8052cbf3b5";
 
 async function sha256hex(str) {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
