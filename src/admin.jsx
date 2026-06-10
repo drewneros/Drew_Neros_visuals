@@ -16,13 +16,55 @@ async function sha256hex(str) {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
+// Set up window.claude using a stored Anthropic API key so classification
+// and alt text work on the deployed site (no Claude Code runtime available).
+function initClaudeAPI() {
+  const key = localStorage.getItem("dn_api_key");
+  if (!key) { window.claude = null; return; }
+  window.claude = {
+    complete: async (opts) => {
+      let messages, model = "claude-haiku-4-5-20251001", max_tokens = 1024;
+      if (typeof opts === "string") {
+        messages = [{ role: "user", content: opts }];
+      } else if (opts && opts.messages) {
+        messages = opts.messages;
+        if (opts.model) model = opts.model;
+        if (opts.max_tokens) max_tokens = opts.max_tokens;
+      }
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-api-key": key,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true",
+        },
+        body: JSON.stringify({ model, max_tokens, messages }),
+      });
+      if (!res.ok) {
+        const e = await res.json().catch(() => ({}));
+        throw new Error(e.error?.message || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      return data.content?.[0]?.text || "";
+    }
+  };
+}
+
 function AdminFlow({ onClose }) {
-  const [authed, setAuthed] = _ais(() => sessionStorage.getItem("dn_owner") === "1");
+  const [authed, setAuthed] = _ais(() => {
+    if (sessionStorage.getItem("dn_owner") === "1") { initClaudeAPI(); return true; }
+    return false;
+  });
   const [step, setStep] = _ais(0);
   const [files, setFiles] = _ais(() => []); // clean start — user adds their own
 
   if (!authed) {
-    return <StepAuth onClose={onClose} onAuthed={() => { sessionStorage.setItem("dn_owner", "1"); setAuthed(true); }} />;
+    return <StepAuth onClose={onClose} onAuthed={() => {
+      initClaudeAPI();
+      sessionStorage.setItem("dn_owner", "1");
+      setAuthed(true);
+    }} />;
   }
 
   return (
@@ -55,30 +97,53 @@ function AdminFlow({ onClose }) {
 /* -------------------- AUTH GATE -------------------- */
 function StepAuth({ onClose, onAuthed }) {
   const [pw, setPw] = _ais("");
-  const [error, setError] = _ais(false);
+  const [apiKey, setApiKey] = _ais(() => localStorage.getItem("dn_api_key") || "");
+  const [screen, setScreen] = _ais("password"); // "password" | "apikey"
+  const [error, setError] = _ais("");
   const [checking, setChecking] = _ais(false);
-  const inputRef = _air(null);
+  const pwRef = _air(null);
+  const keyRef = _air(null);
 
-  _aie(() => { inputRef.current && inputRef.current.focus(); }, []);
+  _aie(() => {
+    const ref = screen === "password" ? pwRef : keyRef;
+    ref.current && ref.current.focus();
+  }, [screen]);
 
-  const check = async (e) => {
+  const checkPw = async (e) => {
     e && e.preventDefault();
     if (!pw.trim() || checking) return;
     setChecking(true);
-    setError(false);
-    await new Promise(r => setTimeout(r, 320)); // brief delay feels more secure
+    setError("");
+    await new Promise(r => setTimeout(r, 320));
     const hash = await sha256hex(pw);
     if (hash === OWNER_HASH) {
-      onAuthed();
+      if (localStorage.getItem("dn_api_key")) {
+        onAuthed(); // key already stored, go straight in
+      } else {
+        setChecking(false);
+        setScreen("apikey");
+      }
     } else {
-      setError(true);
+      setError("Incorrect password");
       setPw("");
       setChecking(false);
-      setTimeout(() => setError(false), 2200);
+      setTimeout(() => setError(""), 2200);
     }
   };
 
-  return (
+  const saveKey = (e) => {
+    e && e.preventDefault();
+    const k = apiKey.trim();
+    if (!k) return;
+    if (!k.startsWith("sk-ant-")) {
+      setError("Key should start with sk-ant-");
+      return;
+    }
+    localStorage.setItem("dn_api_key", k);
+    onAuthed();
+  };
+
+  const overlay = (children) => (
     <div style={{
       position: "fixed", inset: 0, zIndex: 300,
       background: "var(--bg)", color: "var(--fg)",
@@ -86,54 +151,90 @@ function StepAuth({ onClose, onAuthed }) {
       animation: "adminIn .35s cubic-bezier(.2,.7,.2,1)"
     }}>
       <style>{`@keyframes adminIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}`}</style>
-
       <button onClick={onClose} style={{
         position: "absolute", top: 24, right: 32,
-        fontFamily: "var(--mono)", fontSize: 11, color: "var(--fg-soft)",
-        letterSpacing: ".06em"
+        fontFamily: "var(--mono)", fontSize: 11, color: "var(--fg-soft)", letterSpacing: ".06em"
       }}>✕ Cancel</button>
+      {children}
+    </div>
+  );
 
-      <div style={{ width: "100%", maxWidth: 400, padding: "0 24px" }}>
-        <div className="display" style={{ fontSize: 13, letterSpacing: ".1em", color: "var(--fg-faint)", marginBottom: 32, textTransform: "uppercase" }}>
-          Owner console
+  if (screen === "apikey") {
+    return overlay(
+      <div style={{ width: "100%", maxWidth: 460, padding: "0 24px" }}>
+        <div className="meta" style={{ color: "var(--fg-faint)", marginBottom: 32, textTransform: "uppercase", letterSpacing: ".1em" }}>
+          One more thing
         </div>
-        <h2 className="display" style={{ margin: "0 0 32px", fontSize: 48, letterSpacing: "-0.03em", lineHeight: 1 }}>
-          Enter your<br/><span className="italic" style={{ opacity: .6, fontWeight: 400 }}>passphrase.</span>
+        <h2 className="display" style={{ margin: "0 0 16px", fontSize: 48, letterSpacing: "-0.03em", lineHeight: 1 }}>
+          Add your<br/><span className="italic" style={{ opacity: .6, fontWeight: 400 }}>API key.</span>
         </h2>
-
-        <form onSubmit={check} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <p style={{ fontSize: 14, color: "var(--fg-soft)", margin: "0 0 32px", lineHeight: 1.6 }}>
+          The AI needs an Anthropic API key to sort images and write alt text.<br/>
+          Get one free at{" "}
+          <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer"
+            style={{ color: "var(--fg)", textDecoration: "underline", textUnderlineOffset: 3 }}>
+            console.anthropic.com
+          </a>
+          {" "}→ API Keys. Stored only in your browser.
+        </p>
+        <form onSubmit={saveKey} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div style={{
-            padding: "14px 18px",
+            padding: "14px 18px", borderRadius: 6,
             border: `1px solid ${error ? "var(--film-red)" : "var(--line-strong)"}`,
-            borderRadius: 6,
             background: error ? "color-mix(in oklch, var(--film-red) 8%, transparent)" : "color-mix(in oklch, var(--fg) 3%, transparent)",
-            transition: "border-color .2s, background .2s"
+            transition: "all .2s"
           }}>
-            <input
-              ref={inputRef}
-              type="password"
-              value={pw}
-              onChange={e => setPw(e.target.value)}
-              placeholder="Password"
-              autoComplete="current-password"
+            <input ref={keyRef} type="password" value={apiKey}
+              onChange={e => { setApiKey(e.target.value); setError(""); }}
+              placeholder="sk-ant-api03-…" autoComplete="off"
               style={{
                 width: "100%", border: 0, outline: 0, background: "transparent",
-                color: "var(--fg)", fontFamily: "var(--mono)", fontSize: 18, letterSpacing: ".08em"
+                color: "var(--fg)", fontFamily: "var(--mono)", fontSize: 14, letterSpacing: ".04em"
               }}
             />
           </div>
-
-          {error && (
-            <div className="meta" style={{ color: "var(--film-red)", textAlign: "center" }}>
-              Incorrect password
-            </div>
-          )}
-
-          <button type="submit" disabled={!pw.trim() || checking} className="btn" style={{ height: 48, fontSize: 14 }}>
-            {checking ? <>Checking<span className="blink">…</span></> : "Unlock →"}
+          {error && <div className="meta" style={{ color: "var(--film-red)" }}>{error}</div>}
+          <button type="submit" disabled={!apiKey.trim()} className="btn" style={{ height: 48, fontSize: 14 }}>
+            Save & enter console →
+          </button>
+          <button type="button" onClick={onAuthed}
+            className="meta" style={{ color: "var(--fg-faint)", textAlign: "center", padding: "4px 0" }}>
+            Skip — enter without AI features
           </button>
         </form>
       </div>
+    );
+  }
+
+  return overlay(
+    <div style={{ width: "100%", maxWidth: 400, padding: "0 24px" }}>
+      <div className="display" style={{ fontSize: 13, letterSpacing: ".1em", color: "var(--fg-faint)", marginBottom: 32, textTransform: "uppercase" }}>
+        Owner console
+      </div>
+      <h2 className="display" style={{ margin: "0 0 32px", fontSize: 48, letterSpacing: "-0.03em", lineHeight: 1 }}>
+        Enter your<br/><span className="italic" style={{ opacity: .6, fontWeight: 400 }}>passphrase.</span>
+      </h2>
+      <form onSubmit={checkPw} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{
+          padding: "14px 18px", borderRadius: 6,
+          border: `1px solid ${error ? "var(--film-red)" : "var(--line-strong)"}`,
+          background: error ? "color-mix(in oklch, var(--film-red) 8%, transparent)" : "color-mix(in oklch, var(--fg) 3%, transparent)",
+          transition: "border-color .2s, background .2s"
+        }}>
+          <input ref={pwRef} type="password" value={pw}
+            onChange={e => setPw(e.target.value)}
+            placeholder="Password" autoComplete="current-password"
+            style={{
+              width: "100%", border: 0, outline: 0, background: "transparent",
+              color: "var(--fg)", fontFamily: "var(--mono)", fontSize: 18, letterSpacing: ".08em"
+            }}
+          />
+        </div>
+        {error && <div className="meta" style={{ color: "var(--film-red)", textAlign: "center" }}>{error}</div>}
+        <button type="submit" disabled={!pw.trim() || checking} className="btn" style={{ height: 48, fontSize: 14 }}>
+          {checking ? <>Checking<span className="blink">…</span></> : "Unlock →"}
+        </button>
+      </form>
     </div>
   );
 }
@@ -497,6 +598,8 @@ function labelFor(catId) {
 
 /* -------------------- STEP 2: REVIEW (drag/drop fix) -------------------- */
 function StepReview({ files, setFiles, onNext }) {
+  const [reanalyzing, setReanalyzing] = _ais(false);
+
   const groups = _aim(() => {
     const g = {};
     window.CATEGORIES.forEach((c) => g[c.id] = []);
@@ -506,6 +609,23 @@ function StepReview({ files, setFiles, onNext }) {
 
   const onDropTo = (catId, fileId) => {
     setFiles(files.map((f) => f.id === fileId ? { ...f, cat: catId, edited: true } : f));
+  };
+
+  const reanalyze = async () => {
+    if (reanalyzing) return;
+    setReanalyzing(true);
+    const updated = [...files];
+    const cats = window.CATEGORIES.map(c => c.id);
+    for (let i = 0; i < updated.length; i += 4) {
+      const idxs = Array.from({ length: Math.min(4, updated.length - i) }, (_, j) => i + j);
+      await Promise.all(idxs.map(async (idx) => {
+        const result = await window.classifyImageAI(updated[idx], cats);
+        updated[idx] = { ...updated[idx], cat: result.cat, confidence: result.confidence, edited: false,
+          shot: updated[idx].shot ? { ...updated[idx].shot, cat: result.cat } : null };
+      }));
+      setFiles([...updated]);
+    }
+    setReanalyzing(false);
   };
 
   const moved = files.filter((f) => f.edited).length;
@@ -519,10 +639,14 @@ function StepReview({ files, setFiles, onNext }) {
             Here's how I sorted them. <span className="italic" style={{ opacity: .6 }}>Drag to fix anything off.</span>
           </h2>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <span className="meta" style={{ color: "var(--fg-soft)" }}>
             {moved > 0 ? `${moved} moved` : "No edits yet"}
           </span>
+          <button onClick={reanalyze} disabled={reanalyzing} className="btn ghost"
+            style={{ height: 38, padding: "0 16px", fontSize: 12, opacity: reanalyzing ? .6 : 1 }}>
+            {reanalyzing ? <>↻ Re-analyzing<span className="blink">…</span></> : "↻ Re-analyze all"}
+          </button>
           <button onClick={onNext} className="btn" style={{ margin: "10px 0px", padding: "0px 18px 1px" }}>
             Continue <span>→</span>
           </button>
