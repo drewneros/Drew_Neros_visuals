@@ -90,28 +90,7 @@ function App(){
       {adminOpen && <AdminFlow onClose={() => setAdminOpen(false)} />}
 
       <Tweaks tweaks={tweaks} setTweak={setTweak}/>
-
-      {/* small floating "owner" button bottom-right */}
-      <OwnerFab onClick={() => setAdminOpen(true)}/>
     </>
-  );
-}
-
-function OwnerFab({onClick}){
-  return (
-    <button onClick={onClick} title="Open owner upload console (⌘U)"
-      style={{
-        position:"fixed", bottom:24, right:24, zIndex:40,
-        height:42, padding:"0 14px", borderRadius:999,
-        background:"var(--fg)", color:"var(--bg)",
-        display:"inline-flex", alignItems:"center", gap:10,
-        fontFamily:"var(--mono)", fontSize:11, letterSpacing:".08em", textTransform:"uppercase",
-        boxShadow:"0 14px 40px -10px rgba(0,0,0,.35)",
-      }}>
-      <span style={{width:6,height:6, borderRadius:999, background:"var(--film-olive)"}}/>
-      Owner · Upload
-      <span style={{opacity:.5, marginLeft:6}}>⌘U</span>
-    </button>
   );
 }
 

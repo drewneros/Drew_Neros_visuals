@@ -176,16 +176,6 @@ function Sidebar({ tweaks, setTweak, onNav, current, onOpenAdmin, slideIn = true
           <span>Booking — Summer '26</span>
         </div>
 
-        {/* Quiet admin entry */}
-        <button onClick={onOpenAdmin}
-          className="meta"
-          style={{
-            display:"flex",alignItems:"center",justifyContent:"space-between",
-            color:"var(--fg-faint)", letterSpacing:".1em",
-          }}>
-          <span>Owner ▸ Upload + Sort</span>
-          <span>⌘U</span>
-        </button>
       </div>
     </aside>
   );
