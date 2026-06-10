@@ -8,9 +8,22 @@
 
 const { useState: _ais, useEffect: _aie, useRef: _air, useMemo: _aim } = React;
 
+// SHA-256 of the owner password — change by running: echo -n "yourpassword" | sha256sum
+const OWNER_HASH = "a030158721aa3ee4d6335d44a3a9c287824462e50bd3e1384805fd37c118f1a5";
+
+async function sha256hex(str) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
 function AdminFlow({ onClose }) {
+  const [authed, setAuthed] = _ais(() => sessionStorage.getItem("dn_owner") === "1");
   const [step, setStep] = _ais(0);
   const [files, setFiles] = _ais(() => []); // clean start — user adds their own
+
+  if (!authed) {
+    return <StepAuth onClose={onClose} onAuthed={() => { sessionStorage.setItem("dn_owner", "1"); setAuthed(true); }} />;
+  }
 
   return (
     <div style={{
@@ -34,6 +47,92 @@ function AdminFlow({ onClose }) {
         {step === 2 && <StepReview files={files} setFiles={setFiles} onNext={() => setStep(3)} />}
         {step === 3 && <StepAltText files={files} setFiles={setFiles} onNext={() => setStep(4)} />}
         {step === 4 && <StepPublish files={files} onClose={onClose} />}
+      </div>
+    </div>
+  );
+}
+
+/* -------------------- AUTH GATE -------------------- */
+function StepAuth({ onClose, onAuthed }) {
+  const [pw, setPw] = _ais("");
+  const [error, setError] = _ais(false);
+  const [checking, setChecking] = _ais(false);
+  const inputRef = _air(null);
+
+  _aie(() => { inputRef.current && inputRef.current.focus(); }, []);
+
+  const check = async (e) => {
+    e && e.preventDefault();
+    if (!pw.trim() || checking) return;
+    setChecking(true);
+    setError(false);
+    await new Promise(r => setTimeout(r, 320)); // brief delay feels more secure
+    const hash = await sha256hex(pw);
+    if (hash === OWNER_HASH) {
+      onAuthed();
+    } else {
+      setError(true);
+      setPw("");
+      setChecking(false);
+      setTimeout(() => setError(false), 2200);
+    }
+  };
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 300,
+      background: "var(--bg)", color: "var(--fg)",
+      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+      animation: "adminIn .35s cubic-bezier(.2,.7,.2,1)"
+    }}>
+      <style>{`@keyframes adminIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}`}</style>
+
+      <button onClick={onClose} style={{
+        position: "absolute", top: 24, right: 32,
+        fontFamily: "var(--mono)", fontSize: 11, color: "var(--fg-soft)",
+        letterSpacing: ".06em"
+      }}>✕ Cancel</button>
+
+      <div style={{ width: "100%", maxWidth: 400, padding: "0 24px" }}>
+        <div className="display" style={{ fontSize: 13, letterSpacing: ".1em", color: "var(--fg-faint)", marginBottom: 32, textTransform: "uppercase" }}>
+          Owner console
+        </div>
+        <h2 className="display" style={{ margin: "0 0 32px", fontSize: 48, letterSpacing: "-0.03em", lineHeight: 1 }}>
+          Enter your<br/><span className="italic" style={{ opacity: .6, fontWeight: 400 }}>passphrase.</span>
+        </h2>
+
+        <form onSubmit={check} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{
+            padding: "14px 18px",
+            border: `1px solid ${error ? "var(--film-red)" : "var(--line-strong)"}`,
+            borderRadius: 6,
+            background: error ? "color-mix(in oklch, var(--film-red) 8%, transparent)" : "color-mix(in oklch, var(--fg) 3%, transparent)",
+            transition: "border-color .2s, background .2s"
+          }}>
+            <input
+              ref={inputRef}
+              type="password"
+              value={pw}
+              onChange={e => setPw(e.target.value)}
+              placeholder="Password"
+              autoComplete="current-password"
+              style={{
+                width: "100%", border: 0, outline: 0, background: "transparent",
+                color: "var(--fg)", fontFamily: "var(--mono)", fontSize: 18, letterSpacing: ".08em"
+              }}
+            />
+          </div>
+
+          {error && (
+            <div className="meta" style={{ color: "var(--film-red)", textAlign: "center" }}>
+              Incorrect password
+            </div>
+          )}
+
+          <button type="submit" disabled={!pw.trim() || checking} className="btn" style={{ height: 48, fontSize: 14 }}>
+            {checking ? <>Checking<span className="blink">…</span></> : "Unlock →"}
+          </button>
+        </form>
       </div>
     </div>
   );
