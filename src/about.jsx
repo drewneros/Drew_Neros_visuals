@@ -233,7 +233,7 @@ function ServiceRow({ idx, name, line }) {
     <div
       onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
       style={{
-        display: "grid", gridTemplateColumns: "48px 1fr 1fr 60px",
+        display: "grid", gridTemplateColumns: "48px 1fr 1fr",
         alignItems: "center", padding: "20px 0",
         transition: "padding .25s ease, background .25s ease",
         paddingLeft: hover ? 12 : 0, paddingRight: hover ? 12 : 0,
@@ -246,12 +246,6 @@ function ServiceRow({ idx, name, line }) {
         fontStyle: hover ? "italic" : "normal", transition: "font-style .2s"
       }}>{name}</span>
       <span style={{ fontSize: 13, color: "var(--fg-soft)" }}>{line}</span>
-      <span style={{
-        textAlign: "right", fontSize: 18,
-        transform: hover ? "translateX(0)" : "translateX(-6px)",
-        opacity: hover ? 1 : .2,
-        transition: "all .25s ease"
-      }}>→</span>
     </div>
   );
 }

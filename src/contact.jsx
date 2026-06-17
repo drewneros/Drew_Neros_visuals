@@ -34,7 +34,6 @@ function Contact(){
             <ContactLine label="EMAIL" value="drew@nerosvisuals.com" href="mailto:drew@nerosvisuals.com"/>
             <ContactLine label="INSTAGRAM" value="@drewnerosph" href="https://www.instagram.com/drewnerosph/"/>
             <ContactLine label="BEHANCE" value="DrewNeros" href="https://www.behance.net/DrewNeros"/>
-            <ContactLine label="STUDIO" value="Sydney, AU · traveling"/>
             <ContactLine label="REPRESENTATION" value="Open — direct only"/>
           </div>
         </div>

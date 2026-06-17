@@ -83,7 +83,11 @@ function makeShots(catId, n, seedBase) {
   return items;
 }
 
-const ALL_SHOTS = []; // starts empty — only populated by user uploads via the admin flow
+const _LS_KEY = "dn:published_shots";
+
+// Load any previously published shots from localStorage on init
+const _saved = (() => { try { return JSON.parse(localStorage.getItem(_LS_KEY) || "[]"); } catch { return []; } })();
+const ALL_SHOTS = Array.isArray(_saved) ? _saved : [];
 
 // Append uploaded files to ALL_SHOTS so the public galleries reflect what the
 // owner has actually published. Files come from the admin flow and already
@@ -110,14 +114,14 @@ function publishFiles(files){
       alt: f.alt || "",
     });
   });
+  try { localStorage.setItem(_LS_KEY, JSON.stringify(ALL_SHOTS)); } catch {}
   window.dispatchEvent(new CustomEvent("dn:published"));
 }
 
 // "Press / Clients" line items for the About strip
 const CLIENTS = [
-  "Vogue Adria", "ZARA", "Reserved", "Pull&Bear", "Massimo Dutti",
-  "Stradivarius", "OYSHO", "Elle",
-  "Numéro", "Dazed", "i-D", "Document",
+  "Hindash Cosmetics", "Shein", "NAAR.HAUS", "MMG Models", "The Maine",
+  "Hindash Cosmetics", "Shein", "NAAR.HAUS", "MMG Models", "The Maine",
 ];
 
 const SERVICES = [
@@ -141,4 +145,20 @@ const FAQ = [
 // Random-ish helper to fake AI analysis times
 const wait = (ms) => new Promise(r => setTimeout(r, ms));
 
-Object.assign(window, { CATEGORIES, ALL_SHOTS, CLIENTS, SERVICES, FAQ, makeShots, wait, publishFiles });
+function deleteShot(id) {
+  const idx = ALL_SHOTS.findIndex(s => s.id === id);
+  if (idx === -1) return;
+  ALL_SHOTS.splice(idx, 1);
+  try { localStorage.setItem(_LS_KEY, JSON.stringify(ALL_SHOTS)); } catch {}
+  window.dispatchEvent(new CustomEvent("dn:published"));
+}
+
+function updateShot(id, changes) {
+  const shot = ALL_SHOTS.find(s => s.id === id);
+  if (!shot) return;
+  Object.assign(shot, changes);
+  try { localStorage.setItem(_LS_KEY, JSON.stringify(ALL_SHOTS)); } catch {}
+  window.dispatchEvent(new CustomEvent("dn:published"));
+}
+
+Object.assign(window, { CATEGORIES, ALL_SHOTS, CLIENTS, SERVICES, FAQ, makeShots, wait, publishFiles, deleteShot, updateShot });

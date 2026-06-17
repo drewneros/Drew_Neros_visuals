@@ -279,11 +279,10 @@ function ShotImage({ file, shot, src, style={}, className="", minimal=false, hov
     <div className={className} style={{
       position:"relative", overflow:"hidden",
       background:"#0c0a08",
-      aspectRatio: `${aw}/${ah}`,
       ...style,
     }}>
       <img src={_src} alt={alt || (_shot && _shot.label) || ""}
-        style={{width:"100%", height:"100%", objectFit:fit, display:"block",
+        style={{width:"100%", height:"auto", display:"block",
           filter:"contrast(1.04) saturate(0.92)"}}/>
       {!minimal && _shot && (
         <>

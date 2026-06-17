@@ -5,11 +5,19 @@ const { useState: _gus, useEffect: _gue, useMemo: _gum } = React;
 
 function GallerySection({ tweaks }){
   const [shotCount, setShotCount] = _gus(window.ALL_SHOTS.length);
+  const [city, setCity] = _gus(null);
 
   _gue(() => {
     const onPublish = () => setShotCount(window.ALL_SHOTS.length);
     window.addEventListener("dn:published", onPublish);
     return () => window.removeEventListener("dn:published", onPublish);
+  }, []);
+
+  _gue(() => {
+    fetch("https://ipapi.co/json/")
+      .then(r => r.json())
+      .then(d => { if (d && d.city) setCity(d.city); })
+      .catch(() => {});
   }, []);
 
   return (
@@ -23,7 +31,7 @@ function GallerySection({ tweaks }){
           <h2 className="display" style={{
             margin:0, fontSize:"clamp(56px, 8vw, 120px)", letterSpacing:"-0.04em", fontWeight:500,
           }}>
-            Work.
+            {city ? `Work in ${city}.` : "Work."}
           </h2>
         </div>
         <div className="meta" style={{textAlign:"right", color:"var(--fg-soft)"}}>
@@ -58,7 +66,7 @@ function CategoryGalleries({ tweaks }){
       }}>
         <div className="meta" style={{color:"var(--fg-faint)"}}>No images published yet</div>
         <p style={{fontSize:14, color:"var(--fg-soft)", maxWidth:"36ch", margin:0, lineHeight:1.6}}>
-          Use the owner upload console (⌘U) to drop images, let AI sort them, and publish them to these galleries.
+          No images published yet.
         </p>
       </div>
     );

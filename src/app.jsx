@@ -28,17 +28,6 @@ function App(){
     return () => { document.body.style.overflow = ""; };
   }, [introDone]);
 
-  // ⌘U / Ctrl-U opens admin
-  _aue(() => {
-    const onKey = (e) => {
-      if((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "u"){
-        e.preventDefault();
-        setAdminOpen(true);
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
 
   // intersection observer for nav highlight
   _aue(() => {

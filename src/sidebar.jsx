@@ -3,45 +3,67 @@
 
 const { useEffect: _useEffect, useState: _useState, useMemo: _useMemo } = React;
 
-function useClock({ format = "24h", seconds = true, city = "Sydney" }){
+const cityMap = {
+  Sydney:    { tz: "Australia/Sydney",     code: "AU" },
+  Melbourne: { tz: "Australia/Melbourne",  code: "AU" },
+  Belgrade:  { tz: "Europe/Belgrade",      code: "RS" },
+  Lisbon:    { tz: "Europe/Lisbon",        code: "PT" },
+  London:    { tz: "Europe/London",        code: "UK" },
+  NYC:       { tz: "America/New_York",     code: "US" },
+  LA:        { tz: "America/Los_Angeles",  code: "US" },
+  Tokyo:     { tz: "Asia/Tokyo",           code: "JP" },
+  Dubai:     { tz: "Asia/Dubai",           code: "AE" },
+  Paris:     { tz: "Europe/Paris",         code: "FR" },
+  Bali:      { tz: "Asia/Makassar",        code: "ID" },
+  Istanbul:  { tz: "Europe/Istanbul",      code: "TR" },
+};
+
+function useClock({ format = "24h", seconds = true, tz, city, code }){
   const [now, setNow] = _useState(() => new Date());
   _useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(id);
   }, []);
 
-  const cityMap = {
-    Sydney:   { tz: "Australia/Sydney", code: "AU" },
-    Melbourne:{ tz: "Australia/Melbourne", code: "AU" },
-    Belgrade: { tz: "Europe/Belgrade", code: "RS" },
-    Lisbon:   { tz: "Europe/Lisbon",   code: "PT" },
-    London:   { tz: "Europe/London",   code: "UK" },
-    NYC:      { tz: "America/New_York",code: "US" },
-    LA:       { tz: "America/Los_Angeles", code: "US" },
-    Tokyo:    { tz: "Asia/Tokyo",      code: "JP" },
-    Dubai:    { tz: "Asia/Dubai",      code: "AE" },
-    Paris:    { tz: "Europe/Paris",    code: "FR" },
-    Bali:     { tz: "Asia/Makassar",   code: "ID" },
-    Istanbul: { tz: "Europe/Istanbul", code: "TR" },
-  };
-  const cfg = cityMap[city] || cityMap.Sydney;
-
-  const day = now.toLocaleDateString("en-US", { weekday: "short", timeZone: cfg.tz });
-  const timeOpts = {
-    hour: "2-digit", minute: "2-digit",
-    hour12: format === "12h",
-    timeZone: cfg.tz,
-  };
+  const day = now.toLocaleDateString("en-US", { weekday: "short", timeZone: tz });
+  const timeOpts = { hour: "2-digit", minute: "2-digit", hour12: format === "12h", timeZone: tz };
   if(seconds) timeOpts.second = "2-digit";
   const time = now.toLocaleTimeString("en-GB", timeOpts).toUpperCase();
 
-  return { day, time, code: cfg.code, city };
+  return { day, time, code, city };
 }
 
 function Sidebar({ tweaks, setTweak, onNav, current, onOpenAdmin, slideIn = true }){
-  const clock = useClock({ format: tweaks.clockFormat, seconds: tweaks.clockSeconds, city: tweaks.clockCity });
   const side = tweaks.menuSide === "right" ? "right" : "left";
   const [cityMenu, setCityMenu] = _useState(false);
+
+  // Auto-detect location from IP; falls back to manual clockCity tweak
+  const [geo, setGeo] = _useState(null); // { city, code, tz }
+  const [manualCity, setManualCity] = _useState(null); // set when user picks from menu
+
+  _useEffect(() => {
+    fetch("https://ipapi.co/json/")
+      .then(r => r.json())
+      .then(d => {
+        if (d && d.city && d.timezone) {
+          setGeo({ city: d.city, code: d.country_code || "??", tz: d.timezone });
+        }
+      })
+      .catch(() => {}); // silently fall back to manual
+  }, []);
+
+  // Resolve what to display: manual pick > geo > tweaks default
+  const resolved = _useMemo(() => {
+    if (manualCity) {
+      const cfg = cityMap[manualCity];
+      return cfg ? { city: manualCity, code: cfg.code, tz: cfg.tz } : null;
+    }
+    if (geo) return geo;
+    const fallback = cityMap[tweaks.clockCity] || cityMap.Sydney;
+    return { city: tweaks.clockCity || "Sydney", code: fallback.code, tz: fallback.tz };
+  }, [manualCity, geo, tweaks.clockCity]);
+
+  const clock = useClock({ format: tweaks.clockFormat, seconds: tweaks.clockSeconds, ...resolved });
 
   const items = [
     { id: "work",      label: "Work" },
@@ -94,13 +116,20 @@ function Sidebar({ tweaks, setTweak, onNav, current, onOpenAdmin, slideIn = true
           borderRadius:8,
           display:"grid", gridTemplateColumns:"1fr 1fr", gap:4,
         }}>
+          <button onClick={() => { setManualCity(null); setCityMenu(false); }}
+            className="meta"
+            style={{
+              textAlign:"left", padding:"6px 8px", borderRadius:6, gridColumn:"1/-1",
+              color: !manualCity ? "var(--fg)" : "var(--fg-soft)",
+              background: !manualCity ? "color-mix(in oklch, var(--fg) 8%, transparent)" : "transparent",
+            }}>Auto-detect {geo ? `(${geo.city})` : ""}</button>
           {cities.map(c => (
-            <button key={c} onClick={() => { setTweak("clockCity", c); setCityMenu(false); }}
+            <button key={c} onClick={() => { setManualCity(c); setCityMenu(false); }}
               className="meta"
               style={{
                 textAlign:"left", padding:"6px 8px", borderRadius:6,
-                color: tweaks.clockCity === c ? "var(--fg)" : "var(--fg-soft)",
-                background: tweaks.clockCity === c ? "color-mix(in oklch, var(--fg) 8%, transparent)" : "transparent",
+                color: manualCity === c ? "var(--fg)" : "var(--fg-soft)",
+                background: manualCity === c ? "color-mix(in oklch, var(--fg) 8%, transparent)" : "transparent",
               }}
             >{c}</button>
           ))}
@@ -156,7 +185,7 @@ function Sidebar({ tweaks, setTweak, onNav, current, onOpenAdmin, slideIn = true
                 transform: active ? "translateX(0)" : "translateX(-6px)",
                 opacity: active ? 1 : 0,
                 fontSize:13,
-              }}>→</span>
+              }}>—</span>
             </button>
           );
         })}

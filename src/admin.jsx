@@ -18,7 +18,7 @@ async function sha256hex(str) {
 
 // Set up window.claude using a stored Anthropic API key so classification
 // and alt text work on the deployed site (no Claude Code runtime available).
-const _DEFAULT_KEY = "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";
+const _DEFAULT_KEY = "";
 
 function initClaudeAPI() {
   const key = localStorage.getItem("dn_api_key") || _DEFAULT_KEY;
@@ -60,7 +60,8 @@ function AdminFlow({ onClose }) {
     return false;
   });
   const [step, setStep] = _ais(0);
-  const [files, setFiles] = _ais(() => []); // clean start — user adds their own
+  const [files, setFiles] = _ais(() => []);
+  const [mode, setMode] = _ais("upload"); // "upload" | "library"
 
   if (!authed) {
     return <StepAuth onClose={onClose} onAuthed={() => {
@@ -84,14 +85,15 @@ function AdminFlow({ onClose }) {
         @keyframes drift{0%{transform:translate(0,0)}50%{transform:translate(8px,-6px)}100%{transform:translate(0,0)}}
       `}</style>
 
-      <AdminHeader step={step} onClose={onClose} fileCount={files.length} />
+      <AdminHeader step={step} onClose={onClose} fileCount={files.length} mode={mode} onModeChange={(m) => { setMode(m); setStep(0); setFiles([]); }} />
 
       <div style={{ flex: 1, overflow: "auto" }}>
-        {step === 0 && <StepUpload files={files} setFiles={setFiles} onNext={() => setStep(1)} />}
-        {step === 1 && <StepAnalyzing files={files} setFiles={setFiles} onDone={() => setStep(2)} />}
-        {step === 2 && <StepReview files={files} setFiles={setFiles} onNext={() => setStep(3)} />}
-        {step === 3 && <StepAltText files={files} setFiles={setFiles} onNext={() => setStep(4)} />}
-        {step === 4 && <StepPublish files={files} onClose={onClose} />}
+        {mode === "library" && <LibraryManager />}
+        {mode === "upload" && step === 0 && <StepUpload files={files} setFiles={setFiles} onNext={() => setStep(1)} />}
+        {mode === "upload" && step === 1 && <StepAnalyzing files={files} setFiles={setFiles} onDone={() => setStep(2)} />}
+        {mode === "upload" && step === 2 && <StepReview files={files} setFiles={setFiles} onNext={() => setStep(3)} />}
+        {mode === "upload" && step === 3 && <StepAltText files={files} setFiles={setFiles} onNext={() => setStep(4)} />}
+        {mode === "upload" && step === 4 && <StepPublish files={files} onClose={onClose} />}
       </div>
     </div>
   );
@@ -242,7 +244,7 @@ function StepAuth({ onClose, onAuthed }) {
   );
 }
 
-function AdminHeader({ step, onClose, fileCount }) {
+function AdminHeader({ step, onClose, fileCount, mode, onModeChange }) {
   const steps = ["Upload", "Analyze", "Review", "Alt text", "Publish"];
   return (
     <div style={{
@@ -255,10 +257,20 @@ function AdminHeader({ step, onClose, fileCount }) {
           Drew<span style={{ opacity: .3 }}>_</span>Neros<span style={{ opacity: .5 }}>.</span>
         </span>
         <span className="meta" style={{ color: "var(--fg-faint)" }}>· Owner console</span>
+        <div style={{ display: "flex", gap: 2, marginLeft: 8, background: "color-mix(in oklch, var(--fg) 6%, transparent)", borderRadius: 6, padding: 3 }}>
+          {[["upload", "Upload"], ["library", "Library"]].map(([m, label]) => (
+            <button key={m} onClick={() => onModeChange(m)} className="meta" style={{
+              padding: "4px 14px", borderRadius: 4, fontSize: 11, letterSpacing: ".06em",
+              background: mode === m ? "var(--fg)" : "transparent",
+              color: mode === m ? "var(--bg)" : "var(--fg-soft)",
+              transition: "all .2s", cursor: "pointer"
+            }}>{label}</button>
+          ))}
+        </div>
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 14 }} className="progress-pill">
-        {steps.map((s, i) => (
+        {mode === "upload" && steps.map((s, i) => (
           <div key={s} style={{ display: "flex", alignItems: "center", gap: 14 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, opacity: i <= step ? 1 : .35 }}>
               <span style={{
@@ -274,12 +286,15 @@ function AdminHeader({ step, onClose, fileCount }) {
             {i < steps.length - 1 && <span style={{ width: 20, height: 1, background: "var(--line-strong)", opacity: .6 }} />}
           </div>
         ))}
+        {mode === "library" && (
+          <span className="meta" style={{ color: "var(--fg-soft)" }}>Manage published images</span>
+        )}
       </div>
 
       <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 18 }}>
-        <span className="meta" style={{ color: "var(--fg-soft)" }}>
+        {mode === "upload" && <span className="meta" style={{ color: "var(--fg-soft)" }}>
           {fileCount} image{fileCount === 1 ? "" : "s"} staged
-        </span>
+        </span>}
         <button onClick={onClose} className="btn ghost" style={{ height: 38, padding: "0 16px", fontSize: 12 }}>
           ✕ Back to site
         </button>
@@ -777,6 +792,7 @@ function StepAltText({ files, setFiles, onNext }) {
   const cat = window.CATEGORIES.find((c) => c.id === f.cat) || window.CATEGORIES[0];
 
   const setAlt = (text) => setFiles(files.map((x, i) => i === idx ? { ...x, alt: text, edited: true } : x));
+  const setLabel = (text) => setFiles(files.map((x, i) => i === idx ? { ...x, shot: { ...(x.shot || {}), label: text }, edited: true } : x));
 
   const regenerate = async () => {
     if (regenerating) return;
@@ -796,9 +812,17 @@ function StepAltText({ files, setFiles, onNext }) {
       </div>
       <div style={{ display: "flex", flexDirection: "column" }}>
         <div className="meta" style={{ color: "var(--fg-soft)" }}>Step 04 — Alt text · {idx + 1} of {files.length}</div>
-        <h2 className="display" style={{ margin: "12px 0 8px", fontSize: 56, letterSpacing: "-0.02em", lineHeight: 1 }}>
-          {(f.shot && f.shot.label) || f.name}.
-        </h2>
+        <input
+          value={(f.shot && f.shot.label) || ""}
+          onChange={e => setLabel(e.target.value)}
+          placeholder="Image name"
+          style={{
+            margin: "12px 0 8px", fontSize: 42, letterSpacing: "-0.02em", lineHeight: 1,
+            fontFamily: "var(--display, var(--sans))", fontWeight: 600,
+            border: 0, borderBottom: "1px solid var(--line-strong)", outline: "none",
+            background: "transparent", color: "var(--fg)", width: "100%", padding: "4px 0"
+          }}
+        />
         <div className="meta" style={{ color: "var(--fg-faint)", display: "flex", gap: 14 }}>
           <span>{f.name}</span><span>·</span>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
@@ -902,6 +926,374 @@ function StepPublish({ files, onClose }) {
             <span className="meta" style={{ color: "var(--fg-soft)" }}>+{c.n}</span>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+/* -------------------- LIBRARY MANAGER -------------------- */
+function LibraryManager() {
+  const [shots, setShots] = _ais(() => [...window.ALL_SHOTS]);
+  const [filter, setFilter] = _ais("all");
+  const [editingId, setEditingId] = _ais(null);
+  const [confirmDeleteId, setConfirmDeleteId] = _ais(null);
+  const [selected, setSelected] = _ais(new Set());
+  const [confirmBulk, setConfirmBulk] = _ais(false);
+
+  _aie(() => {
+    const onPub = () => setShots([...window.ALL_SHOTS]);
+    window.addEventListener("dn:published", onPub);
+    return () => window.removeEventListener("dn:published", onPub);
+  }, []);
+
+  const visible = filter === "all" ? shots : shots.filter(s => s.cat === filter);
+  const allVisibleSelected = visible.length > 0 && visible.every(s => selected.has(s.id));
+
+  const toggleSelect = (id) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (allVisibleSelected) {
+      setSelected(prev => {
+        const next = new Set(prev);
+        visible.forEach(s => next.delete(s.id));
+        return next;
+      });
+    } else {
+      setSelected(prev => {
+        const next = new Set(prev);
+        visible.forEach(s => next.add(s.id));
+        return next;
+      });
+    }
+  };
+
+  const doDelete = (id) => {
+    window.deleteShot(id);
+    setShots([...window.ALL_SHOTS]);
+    setSelected(prev => { const n = new Set(prev); n.delete(id); return n; });
+    setConfirmDeleteId(null);
+  };
+
+  const doBulkDelete = () => {
+    selected.forEach(id => window.deleteShot(id));
+    setShots([...window.ALL_SHOTS]);
+    setSelected(new Set());
+    setConfirmBulk(false);
+  };
+
+  const editing = editingId ? shots.find(s => s.id === editingId) : null;
+
+  if (shots.length === 0) {
+    return (
+      <div style={{ padding: "80px 64px", display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+        <div style={{ fontSize: 48, opacity: .2 }}>□</div>
+        <div className="meta" style={{ color: "var(--fg-faint)" }}>No published images yet. Upload some first.</div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: "32px 40px" }}>
+      {/* Filter + bulk bar */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 28, flexWrap: "wrap" }}>
+        <span className="meta" style={{ color: "var(--fg-faint)", marginRight: 4 }}>{shots.length} images</span>
+        {[["all", "All"], ...window.CATEGORIES.map(c => [c.id, c.short])].map(([id, label]) => {
+          const count = id === "all" ? shots.length : shots.filter(s => s.cat === id).length;
+          if (count === 0 && id !== "all") return null;
+          return (
+            <button key={id} onClick={() => { setFilter(id); setSelected(new Set()); }} className="meta" style={{
+              padding: "5px 14px", borderRadius: 999, fontSize: 11, letterSpacing: ".06em",
+              border: `1px solid ${filter === id ? "var(--fg)" : "var(--line-strong)"}`,
+              background: filter === id ? "var(--fg)" : "transparent",
+              color: filter === id ? "var(--bg)" : "var(--fg-soft)",
+              transition: "all .18s", cursor: "pointer"
+            }}>{label} <span style={{ opacity: .5 }}>{count}</span></button>
+          );
+        })}
+
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 10 }}>
+          <button onClick={toggleSelectAll} className="meta" style={{
+            padding: "5px 14px", borderRadius: 999, fontSize: 11, letterSpacing: ".06em",
+            border: "1px solid var(--line-strong)",
+            background: allVisibleSelected ? "color-mix(in oklch, var(--fg) 10%, transparent)" : "transparent",
+            color: "var(--fg-soft)", cursor: "pointer", transition: "all .18s"
+          }}>
+            {allVisibleSelected ? "Deselect all" : "Select all"}
+          </button>
+          {selected.size > 0 && (
+            <button onClick={() => setConfirmBulk(true)} className="meta" style={{
+              padding: "5px 16px", borderRadius: 999, fontSize: 11, letterSpacing: ".06em",
+              border: "1px solid var(--film-red)",
+              background: "color-mix(in oklch, var(--film-red) 12%, transparent)",
+              color: "var(--film-red)", cursor: "pointer"
+            }}>
+              Delete {selected.size} selected
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 16 }}>
+        {visible.map(shot => (
+          <LibraryCard
+            key={shot.id}
+            shot={shot}
+            selected={selected.has(shot.id)}
+            onToggleSelect={() => toggleSelect(shot.id)}
+            onEdit={() => setEditingId(shot.id)}
+            onDelete={() => setConfirmDeleteId(shot.id)}
+          />
+        ))}
+      </div>
+
+      {/* Edit modal */}
+      {editing && (
+        <LibraryEditModal
+          shot={editing}
+          onSave={(changes) => {
+            window.updateShot(editing.id, changes);
+            setShots([...window.ALL_SHOTS]);
+            setEditingId(null);
+          }}
+          onClose={() => setEditingId(null)}
+        />
+      )}
+
+      {/* Single delete confirm */}
+      {confirmDeleteId && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 400,
+          background: "color-mix(in oklch, var(--bg) 85%, transparent)",
+          display: "flex", alignItems: "center", justifyContent: "center"
+        }}>
+          <div style={{
+            background: "var(--bg)", border: "1px solid var(--line-strong)",
+            padding: "40px 48px", borderRadius: 8, maxWidth: 380, textAlign: "center"
+          }}>
+            <div style={{ fontSize: 32, marginBottom: 16 }}>⚠</div>
+            <h3 className="display" style={{ margin: "0 0 12px", fontSize: 28 }}>Delete image?</h3>
+            <p className="meta" style={{ color: "var(--fg-soft)", marginBottom: 28, lineHeight: 1.5 }}>
+              Removes it from your gallery permanently.
+            </p>
+            <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+              <button onClick={() => setConfirmDeleteId(null)} className="btn ghost" style={{ height: 40 }}>Cancel</button>
+              <button onClick={() => doDelete(confirmDeleteId)} className="btn" style={{
+                height: 40, background: "var(--film-red)", borderColor: "var(--film-red)"
+              }}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk delete confirm */}
+      {confirmBulk && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 400,
+          background: "color-mix(in oklch, var(--bg) 85%, transparent)",
+          display: "flex", alignItems: "center", justifyContent: "center"
+        }}>
+          <div style={{
+            background: "var(--bg)", border: "1px solid var(--line-strong)",
+            padding: "40px 48px", borderRadius: 8, maxWidth: 400, textAlign: "center"
+          }}>
+            <div style={{ fontSize: 32, marginBottom: 16 }}>⚠</div>
+            <h3 className="display" style={{ margin: "0 0 12px", fontSize: 28 }}>Delete {selected.size} images?</h3>
+            <p className="meta" style={{ color: "var(--fg-soft)", marginBottom: 28, lineHeight: 1.5 }}>
+              All {selected.size} selected images will be removed permanently.
+            </p>
+            <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+              <button onClick={() => setConfirmBulk(false)} className="btn ghost" style={{ height: 40 }}>Cancel</button>
+              <button onClick={doBulkDelete} className="btn" style={{
+                height: 40, background: "var(--film-red)", borderColor: "var(--film-red)"
+              }}>Delete all {selected.size}</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LibraryCard({ shot, selected, onToggleSelect, onEdit, onDelete }) {
+  const [hovered, setHovered] = _ais(false);
+  const cat = window.CATEGORIES.find(c => c.id === shot.cat);
+  const active = hovered || selected;
+
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{ position: "relative", display: "flex", flexDirection: "column", gap: 8 }}>
+
+      <div style={{
+        position: "relative", overflow: "hidden",
+        outline: selected ? "2px solid var(--fg)" : "2px solid transparent",
+        outlineOffset: 2, transition: "outline-color .15s"
+      }}>
+        <ShotImage
+          file={shot.previewUrl ? shot : null}
+          shot={shot}
+          style={{ aspectRatio: `${shot.aw || 4}/${shot.ah || 5}`, display: "block" }}
+        />
+
+        {/* Checkbox — top-left */}
+        <div
+          onClick={onToggleSelect}
+          style={{
+            position: "absolute", top: 8, left: 8,
+            width: 20, height: 20, borderRadius: 4,
+            border: `1.5px solid ${selected ? "var(--fg)" : "rgba(255,255,255,.7)"}`,
+            background: selected ? "var(--fg)" : "rgba(0,0,0,.35)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            opacity: active ? 1 : 0, transition: "opacity .15s",
+            cursor: "pointer", zIndex: 2,
+            color: "var(--bg)", fontSize: 11, fontWeight: 700
+          }}>
+          {selected && "✓"}
+        </div>
+
+        {/* Action overlay */}
+        <div style={{
+          position: "absolute", inset: 0,
+          background: "color-mix(in oklch, var(--bg) 70%, transparent)",
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+          opacity: hovered ? 1 : 0, transition: "opacity .2s"
+        }}>
+          <button onClick={onEdit} className="btn" style={{ height: 36, padding: "0 16px", fontSize: 12 }}>Edit</button>
+          <button onClick={onDelete} className="btn ghost" style={{
+            height: 36, padding: "0 16px", fontSize: 12,
+            borderColor: "var(--film-red)", color: "var(--film-red)"
+          }}>Delete</button>
+        </div>
+      </div>
+
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontFamily: "var(--sans)", fontSize: 13, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {shot.label || "Untitled"}
+        </div>
+        <div className="meta" style={{ color: "var(--fg-faint)", display: "flex", alignItems: "center", gap: 6, marginTop: 3 }}>
+          {cat && <span style={{ width: 6, height: 6, borderRadius: 999, background: cat.accent, flexShrink: 0 }} />}
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{cat ? cat.short : shot.cat}</span>
+          {shot.alt && <span style={{ opacity: .5 }}>· alt ✓</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LibraryEditModal({ shot, onSave, onClose }) {
+  const [label, setLabel] = _ais(shot.label || "");
+  const [alt, setAlt] = _ais(shot.alt || "");
+  const [cat, setCat] = _ais(shot.cat || window.CATEGORIES[0].id);
+  const [regenerating, setRegenerating] = _ais(false);
+
+  const regenerate = async () => {
+    if (regenerating) return;
+    setRegenerating(true);
+    try {
+      const text = await window.generateAltAI(shot);
+      setAlt(text);
+    } finally {
+      setRegenerating(false);
+    }
+  };
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 400,
+      background: "color-mix(in oklch, var(--bg) 88%, transparent)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      padding: 24
+    }} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div style={{
+        background: "var(--bg)", border: "1px solid var(--line-strong)",
+        borderRadius: 8, width: "100%", maxWidth: 780,
+        display: "grid", gridTemplateColumns: "1fr 1.4fr",
+        overflow: "hidden", maxHeight: "90vh"
+      }}>
+        {/* Image preview */}
+        <div style={{ background: "color-mix(in oklch, var(--fg) 4%, transparent)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+          <ShotImage
+            file={shot.previewUrl ? shot : null}
+            shot={shot}
+            style={{ aspectRatio: `${shot.aw || 4}/${shot.ah || 5}`, maxHeight: "70vh", width: "100%" }}
+          />
+        </div>
+
+        {/* Edit form */}
+        <div style={{ padding: "32px 28px", display: "flex", flexDirection: "column", gap: 20, overflow: "auto" }}>
+          <div>
+            <div className="meta" style={{ color: "var(--fg-faint)", marginBottom: 8 }}>Name</div>
+            <input
+              value={label}
+              onChange={e => setLabel(e.target.value)}
+              placeholder="Image name"
+              style={{
+                width: "100%", border: "1px solid var(--line-strong)", padding: "10px 14px",
+                borderRadius: 4, background: "transparent", color: "var(--fg)",
+                fontFamily: "var(--sans)", fontSize: 16, outline: "none",
+                boxSizing: "border-box"
+              }}
+            />
+          </div>
+
+          <div>
+            <div className="meta" style={{ color: "var(--fg-faint)", marginBottom: 8 }}>Category</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              {window.CATEGORIES.map(c => (
+                <button key={c.id} onClick={() => setCat(c.id)} className="meta" style={{
+                  padding: "5px 12px", borderRadius: 999, fontSize: 11,
+                  border: `1px solid ${cat === c.id ? "var(--fg)" : "var(--line-strong)"}`,
+                  background: cat === c.id ? "var(--fg)" : "transparent",
+                  color: cat === c.id ? "var(--bg)" : "var(--fg-soft)",
+                  display: "flex", alignItems: "center", gap: 6, cursor: "pointer", transition: "all .15s"
+                }}>
+                  <span style={{ width: 6, height: 6, borderRadius: 999, background: c.accent }} />
+                  {c.short}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <div className="meta" style={{ color: "var(--fg-faint)", marginBottom: 8 }}>Alt text</div>
+            <textarea
+              value={alt}
+              onChange={e => setAlt(e.target.value)}
+              rows={4}
+              placeholder="Describe the image for accessibility…"
+              style={{
+                width: "100%", border: "1px solid var(--line-strong)", padding: "10px 14px",
+                borderRadius: 4, background: "transparent", color: "var(--fg)",
+                fontFamily: "var(--sans)", fontSize: 14, lineHeight: 1.5, outline: "none",
+                resize: "vertical", boxSizing: "border-box"
+              }}
+            />
+            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
+              <span className="meta" style={{ color: "var(--fg-faint)" }}>
+                {regenerating ? <>writing…</> : <>{alt.length} chars</>}
+              </span>
+              <button onClick={regenerate} disabled={regenerating} className="meta"
+                style={{ color: regenerating ? "var(--fg-faint)" : "var(--fg-soft)", cursor: regenerating ? "default" : "pointer" }}>
+                {regenerating ? "↻ Generating…" : "↻ Regenerate with AI"}
+              </button>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: 10, marginTop: "auto", paddingTop: 8 }}>
+            <button onClick={onClose} className="btn ghost" style={{ flex: 1, height: 42 }}>Cancel</button>
+            <button onClick={() => onSave({ label, alt, cat })} className="btn" style={{ flex: 2, height: 42 }}>
+              Save changes
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
