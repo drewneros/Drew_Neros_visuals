@@ -121,7 +121,9 @@ function publishFiles(files){
 // "Press / Clients" line items for the About strip
 const CLIENTS = [
   "Hindash Cosmetics", "Shein", "NAAR.HAUS", "MMG Models", "The Maine",
+  "Black Island", "Moevir Magazine", "MOB Magazine", "L'Attirance Magazine", "Born Outside Italy",
   "Hindash Cosmetics", "Shein", "NAAR.HAUS", "MMG Models", "The Maine",
+  "Black Island", "Moevir Magazine", "MOB Magazine", "L'Attirance Magazine", "Born Outside Italy",
 ];
 
 const SERVICES = [
