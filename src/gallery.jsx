@@ -164,14 +164,13 @@ function Lightbox({shot, onClose}){
 
       {/* image side */}
       <div style={{
-        display:"flex", alignItems:"center", justifyContent:"center", padding:48,
+        display:"flex", alignItems:"center", justifyContent:"center", padding:32, overflow:"hidden",
       }}>
-        <div style={{maxHeight:"86vh", maxWidth:"100%", height:"100%", display:"flex", alignItems:"center", justifyContent:"center"}}>
-          <ShotImage shot={shot} file={shot.previewUrl ? shot : null} hoverable={false} style={{
-            aspectRatio:`${shot.aw}/${shot.ah}`,
-            height:"100%", maxHeight:"86vh", maxWidth:"100%",
-          }}/>
-        </div>
+        <img
+          src={shot.previewUrl}
+          alt={shot.label || ""}
+          style={{maxHeight:"90vh", maxWidth:"100%", objectFit:"contain", display:"block"}}
+        />
       </div>
 
       {/* meta side */}

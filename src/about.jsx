@@ -47,10 +47,11 @@ function About() {
 }
 
 function PortraitSlot({ src }) {
-  if (src) {
+  const stored = src || (() => { try { return localStorage.getItem("drew.portrait.dataurl"); } catch { return null; } })();
+  if (stored) {
     return (
       <div style={{ position: "relative", aspectRatio: "4/5" }}>
-        <img src={src} alt="Drew Neros — portrait" style={{
+        <img src={stored} alt="Drew Neros — portrait" style={{
           width: "100%", height: "100%", objectFit: "cover", display: "block"
         }} />
       </div>
