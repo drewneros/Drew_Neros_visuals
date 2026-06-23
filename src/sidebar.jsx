@@ -192,19 +192,11 @@ function Sidebar({ tweaks, setTweak, onNav, current, onOpenAdmin, slideIn = true
       </nav>
 
       <div style={{marginTop:"auto", display:"flex", flexDirection:"column", gap:18}}>
-        {/* Get in touch button */}
-        <button className="btn" style={{alignSelf:"flex-start"}}
-          onClick={() => window.open("https://tally.so/r/BzD4YK", "_blank")}>
-          <span>Get in touch</span>
-          <span aria-hidden style={{display:"inline-flex",width:18,height:18,alignItems:"center",justifyContent:"center"}}>↗</span>
-        </button>
-
         {/* Status pill */}
         <div className="meta" style={{display:"flex",alignItems:"center",gap:8,color:"var(--fg-soft)"}}>
           <span className="dot blink" style={{width:7,height:7,borderRadius:999,background:"var(--film-olive)"}}/>
           <span>Booking — Summer '26</span>
         </div>
-
       </div>
     </aside>
   );
