@@ -192,10 +192,6 @@ function Lightbox({shot, onClose}){
           <p style={{fontSize:14, lineHeight:1.6, color:"rgba(244,241,234,.92)", margin:0}}>
             {shot.alt || altText}
           </p>
-          <button className="meta" style={{
-            marginTop:14, color:"rgba(255,255,255,.6)",
-            textDecoration:"underline", textUnderlineOffset:3,
-          }}>Edit alt text →</button>
         </div>
 
         <div style={{
