@@ -5,7 +5,7 @@ function About() {
     <section id="about" data-screen-label="02 About" style={{ padding: "96px 56px 56px" }}>
       <div className="meta" style={{ marginBottom: 32 }}>02 — About</div>
 
-      <div style={{
+      <div className="about-grid" style={{
         display: "grid",
         gridTemplateColumns: "minmax(260px, 380px) 1fr",
         gap: 64, alignItems: "start",
@@ -77,7 +77,7 @@ function Marquee() {
   const items = window.CLIENTS;
   const list = [...items, ...items];
   return (
-    <div style={{
+    <div className="marquee-wrap" style={{
       marginInline: -56,
       paddingBlock: 24,
       overflow: "hidden"
@@ -121,6 +121,7 @@ function ServiceRow({ idx, name, line }) {
   return (
     <div
       onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
+      className="service-row-inner"
       style={{
         display: "grid", gridTemplateColumns: "48px 1fr 1fr",
         alignItems: "center", padding: "20px 0",
@@ -134,14 +135,14 @@ function ServiceRow({ idx, name, line }) {
         fontSize: 42, letterSpacing: "-0.035em", fontWeight: 500,
         fontStyle: hover ? "italic" : "normal", transition: "font-style .2s"
       }}>{name}</span>
-      <span style={{ fontSize: 13, color: "var(--fg-soft)" }}>{line}</span>
+      <span className="service-row-desc" style={{ fontSize: 13, color: "var(--fg-soft)" }}>{line}</span>
     </div>
   );
 }
 
 function Faq() {
   return (
-    <div style={{ marginTop: 96, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 64 }}>
+    <div className="faq-grid" style={{ marginTop: 96, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 64 }}>
       <div>
         <div className="meta" style={{ marginBottom: 20 }}>04 — Common questions</div>
         <h3 className="display" style={{ margin: 0, fontSize: 48, letterSpacing: "-0.04em", fontWeight: 500 }}>

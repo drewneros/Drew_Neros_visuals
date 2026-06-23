@@ -88,7 +88,7 @@ function CategoryBlock({ cat, idx, density, onOpen }){
   const cols = density === "compact" ? 4 : density === "loose" ? 2 : 3;
   return (
     <div>
-      <div style={{
+      <div className="cat-header" style={{
         display:"grid", gridTemplateColumns:"auto 1fr auto",
         alignItems:"end", gap:24, marginBottom:20,
       }}>
@@ -100,7 +100,7 @@ function CategoryBlock({ cat, idx, density, onOpen }){
         }}>
           {cat.name}
         </h3>
-        <div style={{display:"flex", alignItems:"center", gap:14}}>
+        <div className="cat-chip" style={{display:"flex", alignItems:"center", gap:14}}>
           <span className="chip">
             <span className="dot" style={{background:cat.accent}}/>
             {shots.length} frames
@@ -159,13 +159,17 @@ function Lightbox({shot, onClose}){
       background:"rgba(8,8,7,.94)", color:"#F4F1EA",
       display:"grid", gridTemplateColumns:"1fr 340px", gap:0,
       animation:"fadeIn .35s ease",
-    }}>
+    }} className="lightbox-inner">
       <style>{`@keyframes fadeIn{from{opacity:0}to{opacity:1}}`}</style>
 
       {/* image side */}
       <div style={{
-        display:"flex", alignItems:"center", justifyContent:"center", padding:32, overflow:"hidden",
+        position:"relative", display:"flex", alignItems:"center", justifyContent:"center", padding:32, overflow:"hidden",
       }}>
+        <button onClick={onClose} className="lightbox-close-mobile meta" style={{
+          position:"absolute", top:16, right:16,
+          color:"rgba(255,255,255,.8)", display:"none", alignItems:"center", gap:6,
+        }}>✕ Close</button>
         <img
           src={shot.previewUrl}
           alt={shot.label || ""}
@@ -174,7 +178,7 @@ function Lightbox({shot, onClose}){
       </div>
 
       {/* meta side */}
-      <div style={{
+      <div className="lightbox-meta" style={{
         padding:"40px 36px", borderLeft:"1px solid rgba(255,255,255,.12)",
         display:"flex", flexDirection:"column", gap:24,
       }}>

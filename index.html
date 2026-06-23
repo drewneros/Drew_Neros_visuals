@@ -162,7 +162,24 @@
     .footer-grid{ grid-template-columns: 1fr 1fr !important; row-gap: 28px !important }
     .admin-2col{ grid-template-columns: 1fr !important; gap: 32px !important }
     .admin-buckets{ grid-template-columns: 1fr !important }
-    .progress-pill{ display:none !important } /* step pills hide on tiny screens */
+    .progress-pill{ display:none !important }
+    /* About section responsive */
+    .about-grid{ grid-template-columns: 1fr !important; gap: 32px !important }
+    .faq-grid{ grid-template-columns: 1fr !important; gap: 40px !important }
+    .service-row-inner{ grid-template-columns: 48px 1fr !important }
+    .service-row-desc{ display:none !important }
+    /* Lightbox: image full-screen, hide meta panel */
+    .lightbox-inner{ grid-template-columns: 1fr !important }
+    .lightbox-meta{ display:none !important }
+    .lightbox-close-mobile{ display:flex !important }
+    /* Category header chip on new line */
+    .cat-header{ grid-template-columns: auto 1fr !important; row-gap:10px }
+    .cat-chip{ grid-column: 1 / -1 !important }
+    /* Marquee negative margin synced to --pad */
+    .marquee-wrap{ margin-inline: calc(-1 * var(--pad)) !important }
+    /* Section top padding */
+    #work{ padding-top: 48px !important }
+    #about{ padding-top: 48px !important }
   }
   @media (max-width: 520px){
     .footer-grid{ grid-template-columns: 1fr !important }
