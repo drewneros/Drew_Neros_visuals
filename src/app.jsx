@@ -1,11 +1,7 @@
-// App root: wires everything together. Applies theme + accent + grain to
-// document, owns nav state, mounts the admin overlay, mounts tweaks.
-
 const { useEffect: _aue, useState: _aus, useCallback: _auc } = React;
 
 function App(){
   const [tweaks, setTweak] = window.useTweaks(window.__TWEAK_DEFAULTS__);
-  const [adminOpen, setAdminOpen] = _aus(false);
   const [current, setCurrent] = _aus("work");
   const [introDone, setIntroDone] = _aus(false);
 
@@ -63,7 +59,7 @@ function App(){
       {/* Cinematic intro — full-screen until user scrolls/clicks */}
       {!introDone && <Intro tweaks={tweaks} onDone={() => setIntroDone(true)}/>}
 
-      <Sidebar tweaks={tweaks} setTweak={setTweak} onNav={onNav} current={current} onOpenAdmin={() => setAdminOpen(true)} slideIn={introDone}/>
+      <Sidebar tweaks={tweaks} setTweak={setTweak} onNav={onNav} current={current} slideIn={introDone}/>
 
       {/* Main scroll area, offset by sidebar. The intro overlay above acts as
           the hero — once it slides up, the site begins at the work gallery. */}
@@ -76,29 +72,8 @@ function App(){
         <Contact/>
       </main>
 
-      {adminOpen && <AdminFlow onClose={() => setAdminOpen(false)} />}
-
       <Tweaks tweaks={tweaks} setTweak={setTweak}/>
-
-      {/* Invisible tap zone bottom-right — triple-tap opens admin on mobile */}
-      <MobileAdminTrigger onOpen={() => setAdminOpen(true)}/>
     </>
-  );
-}
-
-function MobileAdminTrigger({ onOpen }) {
-  const tapsRef = _auc(() => ({ count: 0, timer: null }), []);
-  const onTap = () => {
-    tapsRef.count += 1;
-    clearTimeout(tapsRef.timer);
-    if (tapsRef.count >= 3) { tapsRef.count = 0; onOpen(); return; }
-    tapsRef.timer = setTimeout(() => { tapsRef.count = 0; }, 600);
-  };
-  return (
-    <div onTouchEnd={onTap} style={{
-      position: "fixed", bottom: 0, right: 0,
-      width: 48, height: 48, zIndex: 50,
-    }}/>
   );
 }
 
