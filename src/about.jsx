@@ -46,132 +46,20 @@ function About() {
   );
 }
 
-// Replaceable portrait slot. Click to pick a file or drop one in — the
-// image is stored in localStorage so it survives reload.
-const PORTRAIT_STORAGE_KEY = "drew.portrait.dataurl";
-
 function PortraitSlot({ src }) {
-  const [stored, setStored] = React.useState(() => {
-    if (src) return src;
-    try { return localStorage.getItem(PORTRAIT_STORAGE_KEY) || null; } catch (e) { return null; }
-  });
-  const [dragOver, setDragOver] = React.useState(false);
-  const inputRef = React.useRef(null);
-
-  const acceptFile = (file) => {
-    if (!file || !file.type || !file.type.startsWith("image/")) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const url = e.target.result;
-      setStored(url);
-      try { localStorage.setItem(PORTRAIT_STORAGE_KEY, url); } catch (err) {}
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const onPick = () => inputRef.current && inputRef.current.click();
-  const onDrop = (e) => {
-    e.preventDefault(); setDragOver(false);
-    const file = e.dataTransfer.files && e.dataTransfer.files[0];
-    acceptFile(file);
-  };
-  const onRemove = (e) => {
-    e.stopPropagation();
-    setStored(null);
-    try { localStorage.removeItem(PORTRAIT_STORAGE_KEY); } catch (err) {}
-  };
-
-  return (
-    <div
-      onClick={onPick}
-      onDragEnter={(e) => { e.preventDefault(); setDragOver(true); }}
-      onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-      onDragLeave={() => setDragOver(false)}
-      onDrop={onDrop}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onPick(); } }}
-      style={{
-        position: "relative",
-        aspectRatio: "4/5",
-        cursor: "pointer",
-        outline: dragOver ? "2px solid var(--fg)" : "none",
-        outlineOffset: -2,
-        transition: "outline .2s ease"
-      }}>
-
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*"
-        style={{ display: "none" }}
-        onChange={(e) => {
-          const f = e.target.files && e.target.files[0];
-          acceptFile(f);
-          e.target.value = "";
+  if (src) {
+    return (
+      <div style={{ position: "relative", aspectRatio: "4/5" }}>
+        <img src={src} alt="Drew Neros — portrait" style={{
+          width: "100%", height: "100%", objectFit: "cover", display: "block"
         }} />
-
-      {stored ? (
-        <>
-          <img src={stored} alt="Drew Neros — portrait" style={{
-            width: "100%", height: "100%", objectFit: "cover", display: "block"
-          }} />
-          <div className="portrait-hover" style={{
-            position: "absolute", inset: 0,
-            background: "linear-gradient(180deg, transparent 55%, rgba(0,0,0,.55) 100%)",
-            opacity: 0, transition: "opacity .2s ease",
-            display: "flex", alignItems: "flex-end", justifyContent: "space-between",
-            padding: "0 14px 14px"
-          }}>
-            <span className="meta" style={{
-              color: "rgba(255,255,255,.95)",
-              background: "rgba(0,0,0,.55)",
-              padding: "6px 12px", borderRadius: 999, backdropFilter: "blur(4px)"
-            }}>Click to replace</span>
-            <button
-              onClick={onRemove}
-              className="meta"
-              style={{
-                color: "rgba(255,255,255,.95)",
-                background: "rgba(0,0,0,.55)",
-                padding: "6px 12px", borderRadius: 999, backdropFilter: "blur(4px)"
-              }}>
-              Remove
-            </button>
-          </div>
-          <style>{`[role="button"]:hover .portrait-hover{ opacity:1 }`}</style>
-        </>
-      ) : (
-        <>
-          <Placeholder
-            shot={{
-              label: "Portrait — click or drop", code: "YOU", aw: 4, ah: 5,
-              tone: "warm", year: ""
-            }}
-            hoverable={false} />
-
-          <div style={{
-            position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
-            flexDirection: "column", gap: 8, pointerEvents: "none"
-          }}>
-            <div className="meta" style={{
-              background: dragOver ? "var(--fg)" : "rgba(0,0,0,.6)",
-              color: dragOver ? "var(--bg)" : "rgba(255,255,255,.95)",
-              padding: "8px 14px", borderRadius: 999, backdropFilter: "blur(4px)",
-              transition: "all .2s ease"
-            }}>
-              {dragOver ? "Drop to set" : "Click or drop your portrait"}
-            </div>
-            <div className="meta" style={{
-              color: "rgba(255,255,255,.7)", background: "rgba(0,0,0,.4)",
-              padding: "4px 10px", borderRadius: 999, fontSize: 9
-            }}>
-              JPG / PNG · stored locally
-            </div>
-          </div>
-        </>
-      )}
-    </div>
+      </div>
+    );
+  }
+  return (
+    <Placeholder
+      shot={{ label: "Drew Neros", code: "DN", aw: 4, ah: 5, tone: "warm", year: "" }}
+      hoverable={false} />
   );
 }
 
