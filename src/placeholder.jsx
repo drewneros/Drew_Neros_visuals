@@ -175,10 +175,10 @@ function getShotPreviewUrl(shot){
   ctx.restore();
 
   // Subject silhouette varies by category
-  const cat = shot.cat || "portraits";
+  const cat = shot.cat || "talent";
   ctx.fillStyle = "rgba(0,0,0,0.62)";
 
-  if(cat === "portraits" || cat === "fashion-editorial" || cat === "models"){
+  if(cat === "talent" || cat === "fashion-editorial"){
     // head + shoulders + neck
     const cx = W * (0.38 + rnd()*0.24);
     const cy = H * (0.30 + rnd()*0.08);
@@ -202,7 +202,7 @@ function getShotPreviewUrl(shot){
     ctx.beginPath();
     ctx.ellipse(cx, cy - hr*0.3, hr*0.95, hr*0.65, 0, Math.PI, 0);
     ctx.fill();
-  } else if(cat === "product"){
+  } else if(cat === "ecommerce"){
     // bottle / stack
     const cx = W*0.5;
     const top = H*(0.30 + rnd()*0.1);

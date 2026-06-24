@@ -352,35 +352,17 @@ function generateAlt(shot){
       "woman wearing layered knitwear, hands in pockets",
       "model in silk slip dress on a plain backdrop",
     ],
-    "portraits": [
+    "talent": [
       "woman with dark hair looking at the camera",
       "man in a white shirt, soft window light on his face",
-      "close-up of a woman wearing small gold earrings",
-      "person leaning against a doorway, half in shadow",
-    ],
-    "models": [
       "model standing front-facing on a neutral seamless",
-      "full-length test of a woman in jeans and a t-shirt",
-      "profile shot of a man against a grey background",
-      "model walking across a plain studio floor",
+      "profile shot of a woman against a grey background",
     ],
     "ecommerce": [
       "white linen shirt photographed on a model against a plain backdrop",
       "wool coat shown from the front, buttons fastened",
       "denim jacket on a model, sleeves rolled up",
       "knit sweater displayed on a figure, cropped at the waist",
-    ],
-    "lifestyle": [
-      "two people talking near a window on a film set",
-      "hands holding a coffee cup, blurred kitchen behind",
-      "stylist adjusting a model's collar between shots",
-      "crew member checking a camera on a tripod",
-    ],
-    "product": [
-      "small glass perfume bottle on a stone surface",
-      "leather handbag photographed from above on linen",
-      "pair of gold earrings laid flat on grey paper",
-      "ceramic cup with steam rising, plain background",
     ],
   }[shot.cat] || ["photograph"];
   const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
@@ -422,41 +404,22 @@ async function classifyImageAI(file, catIds) {
     "  Dramatic lighting, editorial composition, props, or conceptual framing. Feels like a fashion spread or cover.",
     "  Could be studio or location. The styling and visual story are the point.",
     "",
-    "portraits",
-    "  The person as themselves — not styled for fashion, not for a brand, not for an agency file.",
-    "  Intimate, personal. Viewer connects with the subject as a human. Could be close-up or environmental.",
-    "  NOT a fashion shoot. NOT a casting shot. The person's identity is the subject.",
-    "",
-    "models",
-    "  Agency digitals / casting shots / polaroid-style tests. Very clean neutral or white background.",
-    "  Model wears simple, plain, everyday clothing (white tee, jeans, no styling).",
-    "  Poses are standard: front-facing, 3/4 turn, profile, full-length — meant for agency submission.",
-    "  No dramatic lighting, no concept. Just the person clearly documented.",
+    "talent",
+    "  Any portrait, personal study, agency digital, casting shot, or polaroid-style test.",
+    "  Includes close intimate portraits, studio headshots, model digitals, comp card shots.",
+    "  The person is the subject — not selling a garment, not a fashion concept.",
     "",
     "ecommerce",
     "  A specific garment or accessory IS the product being sold. Shot to show the item for retail.",
     "  Person is a 'hanger' for the clothing — clean, consistent, often white/light background.",
-    "  Multiple identical-style frames of different SKUs. Functional, not artistic.",
-    "",
-    "lifestyle",
-    "  Candid, documentary, or brand-storytelling. The environment and context matter as much as the person.",
-    "  Behind-the-scenes, on-set moments, daily life, people in real situations.",
-    "  NOT posed for commercial fashion. Feels observed, not directed.",
-    "",
-    "product",
-    "  NO PEOPLE as the main subject. Objects only: bottles, bags, shoes (no person), jewelry, food, props.",
-    "  Tabletop, flat lay, still life, macro. The thing is the subject, not a person wearing/holding it.",
-    "  If a hand or person appears only incidentally to hold an object, still classify as product.",
+    "  Functional, not artistic. Also includes product still life (no person).",
     "",
     "DECISION RULES (apply in order):",
-    "1. If the main subject is an inanimate object (no person, or person is incidental) → product",
-    "2. If a person is wearing simple clothes on a plain/white background with standard poses → models",
-    "3. If a person is wearing clothes shown for retail sale with clean consistent style → ecommerce",
-    "4. If a person is photographed as themselves with no commercial/fashion intent → portraits",
-    "5. If it has the feel of candid documentary or brand storytelling → lifestyle",
-    "6. If it's high-concept, styled, editorial, artistic fashion → fashion-editorial",
+    "1. If it's high-concept, styled, editorial, artistic fashion → fashion-editorial",
+    "2. If a person is wearing clothes shown for retail sale, or is a product still life → ecommerce",
+    "3. Everything else with a human subject → talent",
     "",
-    "Reply with one of: fashion-editorial, portraits, models, ecommerce, lifestyle, product",
+    "Reply with one of: fashion-editorial, talent, ecommerce",
   ].join("\n");
 
   if (file.previewUrl && window.claude && window.claude.complete) {
@@ -484,12 +447,9 @@ async function classifyImageAI(file, catIds) {
   // Filename heuristics fallback
   const name = (file.name || "").toLowerCase();
   const hints = [
-    { words: ["product", "bottle", "still", "tabletop", "macro", "texture", "object", "prop", "glass"], cat: "product" },
-    { words: ["model", "digital", "polaroid", "test", "casting", "comp"], cat: "models" },
     { words: ["editorial", "fashion", "vogue", "lookbook", "cover", "styling", "look_"], cat: "fashion-editorial" },
-    { words: ["portrait", "headshot", "face", "head", "self"], cat: "portraits" },
-    { words: ["ecomm", "sku", "on-figure", "retail"], cat: "ecommerce" },
-    { words: ["lifestyle", "bts", "behind", "candid", "street", "on-set", "onset"], cat: "lifestyle" },
+    { words: ["ecomm", "sku", "on-figure", "retail", "product", "bottle", "still", "tabletop"], cat: "ecommerce" },
+    { words: ["model", "digital", "polaroid", "test", "casting", "comp", "portrait", "headshot", "face", "head", "lifestyle", "bts"], cat: "talent" },
   ];
   for (const { words, cat } of hints) {
     if (words.some(w => name.includes(w))) return { cat, confidence: 0.70 };
