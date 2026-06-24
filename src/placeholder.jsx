@@ -284,24 +284,6 @@ function ShotImage({ file, shot, src, style={}, className="", minimal=false, hov
       <img src={_src} alt={alt || (_shot && _shot.label) || ""}
         style={{width:"100%", height:"auto", display:"block",
           filter:"contrast(1.04) saturate(0.92)"}}/>
-      {!minimal && _shot && (
-        <>
-          <div style={{
-            position:"absolute", top:8, left:10,
-            fontFamily:"var(--mono)", fontSize:10, letterSpacing:".08em",
-            color:"rgba(255,255,255,0.85)", textShadow:"0 1px 2px rgba(0,0,0,.5)",
-          }}>{_shot.code}</div>
-          <div style={{
-            position:"absolute", bottom:8, left:10, right:10,
-            display:"flex", justifyContent:"space-between",
-            fontFamily:"var(--mono)", fontSize:10, letterSpacing:".06em", textTransform:"uppercase",
-            color:"rgba(255,255,255,0.85)", textShadow:"0 1px 2px rgba(0,0,0,.5)",
-          }}>
-            <span style={{maxWidth:"70%", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap"}}>{_shot.label}</span>
-            <span style={{opacity:.8}}>{_shot.year || ""} · {aw}:{ah}</span>
-          </div>
-        </>
-      )}
       {accent && (
         <span style={{
           position:"absolute", top:10, right:10,
