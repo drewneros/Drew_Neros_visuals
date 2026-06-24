@@ -19,8 +19,8 @@ const CATEGORIES = [
   },
   {
     id: "ecommerce",
-    name: "E-commerce",
-    short: "E-comm",
+    name: "Products",
+    short: "Products",
     blurb: "Clean, consistent, conversion-driven product on figure.",
     accent: "var(--film-teal)",
     count: 15,
@@ -233,7 +233,7 @@ const CLIENTS = [
 const SERVICES = [
   { id: "editorial", name: "Editorial", line: "Concept → shoot → retouch" },
   { id: "campaign",  name: "Campaign",  line: "Multi-day production" },
-  { id: "ecomm",     name: "E-commerce", line: "Studio days, clean delivery" },
+  { id: "ecomm",     name: "Products",   line: "Studio days, clean delivery" },
   { id: "portrait",  name: "Portrait",  line: "Studio or location, half-day" },
   { id: "model-dev", name: "Model Development", line: "Studio or location shoots for emerging talent. Built for agency books and casting submissions." },
   { id: "digitals",  name: "Digitals / Polaroids", line: "Fast, clean agency digitals. Delivered same day." },
