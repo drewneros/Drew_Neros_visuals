@@ -68,11 +68,8 @@ function Intro({ tweaks, onDone }){
         opacity: phase === "blank" ? 0 : 1,
         transition:"opacity 1.3s ease",
       }}>
-        <Placeholder
-          shot={{ label:"Cover — Mira / Look 03", code:"N_001", aw:16, ah:9, tone:"shadow", year:2025 }}
-          hoverable={false} hideMark={true} hideLabel={true}
-          style={{ position:"absolute", inset:0, width:"100%", height:"100%", aspectRatio:"auto" }}
-        />
+        <img src="images/hero_bw.jpg" alt=""
+          style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", objectPosition:"center top" }}/>
         <div style={{
           position:"absolute", inset:0, pointerEvents:"none",
           background:"radial-gradient(120% 80% at 50% 60%, transparent 0%, rgba(0,0,0,.6) 100%)",

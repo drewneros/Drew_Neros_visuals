@@ -121,10 +121,6 @@ function CategoryBlock({ cat, idx, density, onOpen }){
             style={{display:"block", border:0, padding:0, background:"transparent", textAlign:"left"}}
           >
             <ShotImage file={s.previewUrl ? s : null} shot={s} accent={i === 0 ? cat.accent : null} />
-            <div style={{display:"flex", justifyContent:"space-between", marginTop:6}}>
-              <span className="meta" style={{color:"var(--fg-soft)"}}>{s.label}</span>
-              <span className="meta" style={{color:"var(--fg-faint)"}}>{s.code}</span>
-            </div>
           </button>
         ))}
       </Masonry>
