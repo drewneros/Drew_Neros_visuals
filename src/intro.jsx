@@ -69,7 +69,7 @@ function Intro({ tweaks, onDone }){
         transition:"opacity 1.3s ease",
       }}>
         <img src="images/hero_bw.jpg" alt=""
-          style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", objectPosition:"center top" }}/>
+          style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", objectPosition:"center center" }}/>
         <div style={{
           position:"absolute", inset:0, pointerEvents:"none",
           background:"radial-gradient(120% 80% at 50% 60%, transparent 0%, rgba(0,0,0,.6) 100%)",
