@@ -49,7 +49,7 @@ consistent section rhythm, and fix the masonry that scrambles image order.
 - [x] G9: live deploy serves the redesign and every shot still renders
   CHECK: node tools/verify-build.mjs live
   EXPECT: LIVE_OK
-  EVIDENCE: pending live deploy
+  EVIDENCE: live v14 verified, 126 placeholders, webp content-type ok
 
 - [x] G10: visual review at desktop and mobile — reads as designed, not templated
   EVIDENCE: desktop 1440x900 and mobile 375x812 reviewed; first photograph reaches the first screen (59% down, was 76%)
