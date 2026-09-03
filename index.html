@@ -91,6 +91,7 @@
     background-size:cover; background-position:center;
     filter:blur(16px) saturate(1.14);
     transform:scale(1.1);
+    opacity:1;
     transition:opacity .8s var(--ease-out);
   }
   .shot-img.is-loaded .shot-lqip{ opacity:0 }
@@ -110,10 +111,13 @@
      compositor and is scrubbed by scroll position rather than toggled at a
      threshold — a frame comes up as it rises into view and settles back down as
      it leaves, so the gallery breathes with the scroll instead of snapping. */
+  /* Asymmetric on purpose. A frame resolves almost immediately on the way in,
+     so nothing you are actually looking at is ever dimmed, then settles back
+     down slowly on the way out — the leaving is the part you feel. */
   @keyframes frameBreathe{
-      0%,  3%{ opacity:.14; filter:blur(5px); transform:scale(.984) }
-    34%, 66%{ opacity:1;    filter:blur(0);   transform:scale(1) }
-    97%,100%{ opacity:.14; filter:blur(5px); transform:scale(.984) }
+         0%{ opacity:.28; filter:blur(3px); transform:scale(.993) }
+     7%, 80%{ opacity:1;   filter:blur(0);   transform:scale(1) }
+       100%{ opacity:.16; filter:blur(5px); transform:scale(.984) }
   }
   @supports (animation-timeline: view()){
     @media (prefers-reduced-motion: no-preference){
@@ -285,19 +289,19 @@
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
 <!-- tweaks shell -->
-<script type="text/babel" src="src/tweaks-panel.jsx?v=12"></script>
+<script type="text/babel" src="src/tweaks-panel.jsx?v=13"></script>
 
 <!-- App pieces -->
-<script type="text/babel" src="src/data.jsx?v=12"></script>
-<script type="text/babel" src="src/placeholder.jsx?v=12"></script>
-<script type="text/babel" src="src/sidebar.jsx?v=12"></script>
-<script type="text/babel" src="src/intro.jsx?v=12"></script>
-<script type="text/babel" src="src/hero.jsx?v=12"></script>
-<script type="text/babel" src="src/about.jsx?v=12"></script>
-<script type="text/babel" src="src/gallery.jsx?v=12"></script>
-<script type="text/babel" src="src/contact.jsx?v=12"></script>
-<script type="text/babel" src="src/tweaks.jsx?v=12"></script>
-<script type="text/babel" src="src/app.jsx?v=12"></script>
+<script type="text/babel" src="src/data.jsx?v=13"></script>
+<script type="text/babel" src="src/placeholder.jsx?v=13"></script>
+<script type="text/babel" src="src/sidebar.jsx?v=13"></script>
+<script type="text/babel" src="src/intro.jsx?v=13"></script>
+<script type="text/babel" src="src/hero.jsx?v=13"></script>
+<script type="text/babel" src="src/about.jsx?v=13"></script>
+<script type="text/babel" src="src/gallery.jsx?v=13"></script>
+<script type="text/babel" src="src/contact.jsx?v=13"></script>
+<script type="text/babel" src="src/tweaks.jsx?v=13"></script>
+<script type="text/babel" src="src/app.jsx?v=13"></script>
 
 <script>
   // Persistable tweak defaults
