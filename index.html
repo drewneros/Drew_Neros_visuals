@@ -27,6 +27,9 @@
     --rail-w: 300px;
     --pad: 40px;
     --grain-opacity: .045;
+    /* Confident arrival, no bounce. Every timed thing on the site uses it. */
+    --ease-out: cubic-bezier(.16,1,.3,1);
+    --frame-base:#e9e5dd;
   }
   html[data-theme="dark"]{
     --bg:#0E0E0C;
@@ -35,6 +38,7 @@
     --fg-faint:#605C55;
     --line:rgba(237,234,226,.06);
     --line-strong:rgba(237,234,226,.14);
+    --frame-base:#1a1816;
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);font-family:var(--sans);font-weight:400;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
@@ -70,8 +74,62 @@
   @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
   @keyframes blink{50%{opacity:.25}}
   .blink{animation:blink 1.4s steps(2) infinite}
-  @keyframes shotPulse{0%,100%{background-color:#0c0a08}50%{background-color:#1a1712}}
-  .shot-img:not(.is-loaded){animation:shotPulse 1.6s ease-in-out infinite}
+  /* ---------- The develop ----------
+     One motion idea carried through the whole site: a photograph arrives as a
+     field of its own colour and resolves into detail, the way a print comes up
+     in a tray. Loading, scrolling and hovering are that same material at three
+     intensities — never a generic fade. */
+  .shot-img{
+    position:relative;
+    overflow:hidden;
+    background:var(--frame-base);
+    transition:opacity .6s var(--ease-out), filter .6s var(--ease-out), transform .6s var(--ease-out);
+  }
+  /* The 20px placeholder baked into data.jsx, scaled up under a blur. */
+  .shot-lqip{
+    position:absolute; inset:-2px;
+    background-size:cover; background-position:center;
+    filter:blur(16px) saturate(1.14);
+    transform:scale(1.1);
+    transition:opacity .8s var(--ease-out);
+  }
+  .shot-img.is-loaded .shot-lqip{ opacity:0 }
+  .shot-img img{
+    width:100%; height:100%; display:block; object-fit:cover;
+    opacity:0;
+    filter:blur(12px) contrast(1.04) saturate(.92);
+    transform:scale(1.02);
+    transition:opacity .7s var(--ease-out), filter 1s var(--ease-out), transform 1.2s var(--ease-out);
+  }
+  .shot-img.is-loaded img{ opacity:1; filter:blur(0) contrast(1.04) saturate(.92); transform:none }
+  /* Behind you and ahead of you, a frame falls back toward its colour field.
+     JS-observer fallback for engines without scroll-driven animation. */
+  .shot-img:not(.is-present){ opacity:.16; filter:blur(4px); transform:scale(.988) }
+
+  /* Where the engine supports it, the same de-resolve runs continuously off the
+     compositor and is scrubbed by scroll position rather than toggled at a
+     threshold — a frame comes up as it rises into view and settles back down as
+     it leaves, so the gallery breathes with the scroll instead of snapping. */
+  @keyframes frameBreathe{
+      0%,  3%{ opacity:.14; filter:blur(5px); transform:scale(.984) }
+    34%, 66%{ opacity:1;    filter:blur(0);   transform:scale(1) }
+    97%,100%{ opacity:.14; filter:blur(5px); transform:scale(.984) }
+  }
+  @supports (animation-timeline: view()){
+    @media (prefers-reduced-motion: no-preference){
+      .shot-img{
+        animation:frameBreathe linear both;
+        animation-timeline:view();
+        animation-range:entry 0% exit 100%;
+      }
+      /* Let the timeline own these; the observer class must not fight it. */
+      .shot-img:not(.is-present){ opacity:inherit; filter:none; transform:none }
+    }
+  }
+  @media (hover:hover){
+    .shot-img.is-loaded:hover img{ transform:scale(1.032); filter:blur(0) contrast(1.08) saturate(1) }
+  }
+  .shot-accent{ position:absolute; top:10px; right:10px; width:8px; height:8px; border-radius:999px; z-index:2 }
 
   /* Reveal animations — eager so content doesn't feel like it's loading */
   [data-reveal]{opacity:0;transform:translateY(10px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1)}
@@ -201,6 +259,20 @@
     .hero-h1{ font-size: clamp(48px, 14vw, 92px) !important }
   }
 
+  /* Reduced motion: the work still arrives, it just stops moving. Frames sit
+     resolved and present, so nothing is hidden behind an animation. */
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{
+      animation-duration:.01ms !important;
+      animation-iteration-count:1 !important;
+      transition-duration:.01ms !important;
+      scroll-behavior:auto !important;
+    }
+    .shot-img, .shot-img:not(.is-present){ opacity:1 !important; filter:none !important; transform:none !important }
+    .shot-img img{ opacity:1 !important; filter:contrast(1.04) saturate(.92) !important; transform:none !important }
+    .shot-lqip{ opacity:0 !important }
+  }
+
 </style>
 </head>
 <body>
@@ -213,19 +285,19 @@
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
 <!-- tweaks shell -->
-<script type="text/babel" src="src/tweaks-panel.jsx?v=10"></script>
+<script type="text/babel" src="src/tweaks-panel.jsx?v=12"></script>
 
 <!-- App pieces -->
-<script type="text/babel" src="src/data.jsx?v=10"></script>
-<script type="text/babel" src="src/placeholder.jsx?v=10"></script>
-<script type="text/babel" src="src/sidebar.jsx?v=10"></script>
-<script type="text/babel" src="src/intro.jsx?v=10"></script>
-<script type="text/babel" src="src/hero.jsx?v=10"></script>
-<script type="text/babel" src="src/about.jsx?v=10"></script>
-<script type="text/babel" src="src/gallery.jsx?v=10"></script>
-<script type="text/babel" src="src/contact.jsx?v=10"></script>
-<script type="text/babel" src="src/tweaks.jsx?v=10"></script>
-<script type="text/babel" src="src/app.jsx?v=10"></script>
+<script type="text/babel" src="src/data.jsx?v=12"></script>
+<script type="text/babel" src="src/placeholder.jsx?v=12"></script>
+<script type="text/babel" src="src/sidebar.jsx?v=12"></script>
+<script type="text/babel" src="src/intro.jsx?v=12"></script>
+<script type="text/babel" src="src/hero.jsx?v=12"></script>
+<script type="text/babel" src="src/about.jsx?v=12"></script>
+<script type="text/babel" src="src/gallery.jsx?v=12"></script>
+<script type="text/babel" src="src/contact.jsx?v=12"></script>
+<script type="text/babel" src="src/tweaks.jsx?v=12"></script>
+<script type="text/babel" src="src/app.jsx?v=12"></script>
 
 <script>
   // Persistable tweak defaults

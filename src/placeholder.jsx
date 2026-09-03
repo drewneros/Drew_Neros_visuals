@@ -267,13 +267,49 @@ function getShotPreviewUrl(shot){
 
 // Renders a real <img> using either the file's uploaded URL, the shot's
 // procedural preview, or — as a last resort — falls back to <Placeholder>.
-function ShotImage({ file, shot, src, style={}, className="", minimal=false, hoverable=false, alt, accent, fit="cover" }){
+// ---------- Scroll presence ----------
+// One observer for the whole gallery rather than 126 of them. Frames resolve
+// as they approach the viewport and de-resolve behind you, so scrolling feels
+// like moving through a set of prints rather than past a static grid.
+
+let __presenceIO = null;
+function presenceObserver(){
+  if(__presenceIO || typeof IntersectionObserver === "undefined") return __presenceIO;
+  __presenceIO = new IntersectionObserver((entries) => {
+    entries.forEach(e => e.target.classList.toggle("is-present", e.isIntersecting));
+  }, { rootMargin: "-6% 0px -6% 0px", threshold: 0.04 });
+  return __presenceIO;
+}
+
+function useScrollPresence(ref){
+  useEffect(() => {
+    const el = ref.current;
+    const io = presenceObserver();
+    if(!el) return;
+    // Default to present so a failed or absent observer never hides the work.
+    if(!io){ el.classList.add("is-present"); return; }
+    io.observe(el);
+    return () => io.unobserve(el);
+  }, []);
+}
+
+// Renders a real <img> using either the file's uploaded URL, the shot's
+// procedural preview, or — as a last resort — falls back to <Placeholder>.
+//
+// A photograph arrives the way a print comes up: the baked-in 20px lqip paints
+// instantly as a blurred colour field, the full file lands on top and the blur
+// resolves away. The slot is never an empty black box.
+function ShotImage({ file, shot, src, style={}, className="", minimal=false, hoverable=false, alt, accent, fit="cover", eager=false }){
   const _shot = (file && file.shot) || shot;
   const _src  = src || (file && file.previewUrl) || (_shot && getShotPreviewUrl(_shot));
+  const _lqip = (_shot && _shot.lqip) || (file && file.lqip);
   const aw = (_shot && _shot.aw) || 4;
   const ah = (_shot && _shot.ah) || 5;
   const [loaded, setLoaded] = useState(false);
   const imgRef = useRef(null);
+  const boxRef = useRef(null);
+
+  useScrollPresence(boxRef);
 
   // If the browser already has the image cached, `load` may fire before we
   // attach the handler — check on mount.
@@ -287,27 +323,25 @@ function ShotImage({ file, shot, src, style={}, className="", minimal=false, hov
     return <Placeholder shot={_shot} style={style} className={className} minimal={minimal} hoverable={hoverable}/>;
   }
   return (
-    <div className={`${className} shot-img${loaded ? " is-loaded" : ""}`} style={{
-      position:"relative", overflow:"hidden",
-      aspectRatio: loaded ? undefined : `${aw}/${ah}`,
-      background:"#0c0a08",
-      ...style,
-    }}>
-      <img ref={imgRef} src={_src} alt={alt || (_shot && _shot.label) || ""}
+    <div
+      ref={boxRef}
+      className={`${className} shot-img${loaded ? " is-loaded" : ""}`}
+      style={{ aspectRatio: `${aw}/${ah}`, ...style }}
+    >
+      {_lqip && <div className="shot-lqip" style={{backgroundImage:`url("${_lqip}")`}} aria-hidden="true"/>}
+      <img
+        ref={imgRef}
+        src={_src}
+        alt={alt || (_shot && _shot.label) || ""}
+        loading={eager ? "eager" : "lazy"}
+        decoding="async"
+        fetchpriority={eager ? "high" : "auto"}
         onLoad={() => setLoaded(true)}
         onError={() => setLoaded(true)}
-        style={{width:"100%", height:"auto", display:"block",
-          opacity: loaded ? 1 : 0,
-          transition:"opacity .45s ease",
-          filter:"contrast(1.04) saturate(0.92)"}}/>
-      {accent && (
-        <span style={{
-          position:"absolute", top:10, right:10,
-          width:8, height:8, borderRadius:999, background:accent,
-        }}/>
-      )}
+      />
+      {accent && <span className="shot-accent" style={{background:accent}}/>}
     </div>
   );
 }
 
-Object.assign(window, { Placeholder, useReveal, CropMarks, ShotImage, getShotPreviewUrl });
+Object.assign(window, { Placeholder, useReveal, CropMarks, ShotImage, getShotPreviewUrl, useScrollPresence });

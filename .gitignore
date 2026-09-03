@@ -1,3 +1,8 @@
 src/admin.jsx
 console.html
 .claude/
+
+# Full-resolution originals (195MB). Kept locally; also recoverable from
+# git history at b0c4ffd. Never ship these.
+images-full/
+.lqip-tmp/

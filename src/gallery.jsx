@@ -120,7 +120,7 @@ function CategoryBlock({ cat, idx, density, onOpen }){
             onClick={() => onOpen(s)}
             style={{display:"block", border:0, padding:0, background:"transparent", textAlign:"left"}}
           >
-            <ShotImage file={s.previewUrl ? s : null} shot={s} accent={i === 0 ? cat.accent : null} />
+            <ShotImage file={s.previewUrl ? s : null} shot={s} accent={i === 0 ? cat.accent : null} eager={idx === 0 && i < 3} />
           </button>
         ))}
       </Masonry>
