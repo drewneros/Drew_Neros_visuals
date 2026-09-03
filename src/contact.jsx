@@ -16,17 +16,10 @@ function Contact(){
   };
 
   return (
-    <section id="contact" data-screen-label="05 Contact" style={{
-      padding:"72px 56px 40px",
-    }}>
-      <div className="meta" style={{marginBottom:24}}>05 — Get in touch</div>
-
+    <section id="contact" data-screen-label="05 Contact" className="section">
       <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:48, alignItems:"start"}} className="grid-2col">
         <div>
-          <h2 className="display" style={{
-            margin:"0 0 28px", fontSize:"clamp(36px, 4vw, 58px)",
-            letterSpacing:"-0.04em", lineHeight:1, fontWeight:600,
-          }}>
+          <h2 className="display t-title" style={{margin:"0 0 var(--s-4)"}}>
             Let's make something<br/><span className="italic" style={{opacity:.7, fontWeight:400}}>worth looking at.</span>
           </h2>
 
@@ -51,7 +44,7 @@ function Contact(){
               height:48, padding:"0 24px", borderRadius:999,
               background: sent ? "var(--film-olive)" : (valid ? "var(--fg)" : "color-mix(in oklch, var(--fg) 8%, transparent)"),
               color: sent || valid ? "var(--bg)" : "var(--fg-soft)",
-              fontFamily:"var(--sans)", fontSize:14, letterSpacing:".01em", fontWeight:500,
+              fontFamily:"var(--sans)", fontSize:"var(--t-body)", letterSpacing:".01em", fontWeight:500,
               transition:"all .3s ease",
               cursor: valid && !sent ? "pointer" : "default",
             }}>
@@ -78,7 +71,7 @@ function ContactLine({label, value, href}){
       alignItems:"center", gap:16,
     }}>
       <span className="meta" style={{color:"var(--fg-faint)"}}>{label}</span>
-      <span style={{fontFamily:"var(--sans)", fontSize:15, fontWeight:500, letterSpacing:"-0.01em"}}>{value}</span>
+      <span style={{fontFamily:"var(--sans)", fontSize:"var(--t-body)", fontWeight:500, letterSpacing:"-0.01em"}}>{value}</span>
     </div>
   );
   if(href) return <a href={href} target={href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer">{Inner}</a>;
@@ -109,7 +102,7 @@ function Field({label, value, onChange, textarea, type="text", placeholder}){
           rows={4}
           style={{
             border:0, outline:0, background:"transparent", color:"var(--fg)",
-            fontFamily:"var(--sans)", fontSize:16, resize:"vertical", padding:0,
+            fontFamily:"var(--sans)", fontSize:"var(--t-lead)", resize:"vertical", padding:0,
           }}
         />
       ) : (
@@ -120,7 +113,7 @@ function Field({label, value, onChange, textarea, type="text", placeholder}){
           placeholder={placeholder || "…"}
           style={{
             border:0, outline:0, background:"transparent", color:"var(--fg)",
-            fontFamily:"var(--sans)", fontSize:18, padding:0,
+            fontFamily:"var(--sans)", fontSize:"var(--t-lead)", padding:0,
           }}
         />
       )}
@@ -153,7 +146,7 @@ function Footer(){
       display:"grid", gridTemplateColumns:"1.2fr 1fr 1fr 1fr", gap:32,
       color:"var(--fg-soft)",
     }} className="footer-grid">
-      <div className="display" style={{fontSize:22, color:"var(--fg)", letterSpacing:"-0.03em", fontWeight:600}}>
+      <div className="display" style={{fontSize:"var(--t-sub)", color:"var(--fg)", letterSpacing:"-0.03em", fontWeight:600}}>
         Drew<span style={{opacity:.3}}>_</span>Neros<span style={{opacity:.5}}>.</span>
         <div className="meta" style={{color:"var(--fg-faint)", marginTop:6}}>Photographer / Retoucher</div>
       </div>
@@ -163,7 +156,7 @@ function Footer(){
         {nav.map(l => (
           <button key={l.label} onClick={() => scrollTo(l.id)}
             style={{
-              display:"block", padding:"3px 0", fontSize:13,
+              display:"block", padding:"3px 0", fontSize:"var(--t-body)",
               color:"var(--fg-soft)", textAlign:"left",
               transition:"color .2s",
             }}
@@ -180,7 +173,7 @@ function Footer(){
             target={l.href.startsWith("http") ? "_blank" : undefined}
             rel="noopener noreferrer"
             style={{
-              display:"block", padding:"3px 0", fontSize:13,
+              display:"block", padding:"3px 0", fontSize:"var(--t-body)",
               color:"var(--fg-soft)", transition:"color .2s",
             }}
             onMouseEnter={(e) => e.currentTarget.style.color = "var(--fg)"}
@@ -191,7 +184,7 @@ function Footer(){
 
       <div>
         <div className="meta" style={{color:"var(--fg-faint)", marginBottom:10}}>Colophon</div>
-        <div style={{fontSize:13, lineHeight:1.55}}>
+        <div className="t-body">
           Built by Drew Neros · 2026.<br/>
           © All images reserved.
         </div>

@@ -2,36 +2,28 @@
 
 function About() {
   return (
-    <section id="about" data-screen-label="02 About" style={{ padding: "96px 56px 56px" }}>
-      <div className="meta" style={{ marginBottom: 32 }}>02 — About</div>
-
-      <div className="about-grid" style={{
-        display: "grid",
-        gridTemplateColumns: "minmax(260px, 380px) 1fr",
-        gap: 64, alignItems: "start",
-        marginBottom: 96
-      }}>
+    <section id="about" data-screen-label="02 About" className="section">
+      <div className="about-grid">
         <PortraitSlot />
 
         <div>
-          <h2 className="display" style={{
-            margin: "0 0 28px", fontSize: "clamp(56px, 7vw, 104px)",
-            letterSpacing: "-0.045em", fontWeight: 500, lineHeight: .95
-          }}>
+          {/* The name is the heading. It replaced an "02 — About" label sitting
+              above a heading that already said the same thing. */}
+          <h2 className="display t-title about-name">
             Drew<span style={{ opacity: .3, margin: "0 0.04em" }}>_</span>Neros<span style={{ opacity: .5 }}>.</span>
           </h2>
 
-          <p style={{ fontSize: 18, lineHeight: 1.45, margin: "0 0 16px", maxWidth: "48ch" }}>
-            I'm a photographer and retoucher based in Sydney, working between Australia, Europe and Asia. I make pictures with stillness in them, the kind you keep looking at after you've already scrolled past.
+          <p className="t-sub about-lead">
+            I photograph people in cities I don't live in.
           </p>
-          <p style={{ fontSize: 14, lineHeight: 1.6, color: "var(--fg-soft)", margin: "0 0 24px", maxWidth: "56ch" }}>
-            Eight years on set — studios, apartments, streets figuring out the version of a person that only shows up after the third frame. I work small, fast, and honest. Clients trust me to deliver the look they imagined, and to know when to push past it.
+          <p className="t-body measure about-body">
+            Based in Sydney, working between Australia, Europe and Asia. Eight years on set, in studios, apartments and streets, looking for the version of a person that only shows up after the third frame. I work small, fast and honest.
           </p>
-          <p style={{ fontSize: 14, lineHeight: 1.6, color: "var(--fg-soft)", margin: "0 0 24px", maxWidth: "56ch" }}>
-            With a background in modeling myself, I understand what agencies need before the brief is even written.
+          <p className="t-body measure about-body">
+            I modelled before I shot, so I know what an agency needs before the brief is written.
           </p>
 
-          <div style={{ display: "flex", gap: 36, marginTop: 36, flexWrap: "wrap" }}>
+          <div className="about-stats">
             <Stat n="60+" label="Editorials" />
             <Stat n="120+" label="Campaigns" />
             <Stat n="8" label="Years working" />
@@ -67,7 +59,7 @@ function PortraitSlot({ src }) {
 function Stat({ n, label }) {
   return (
     <div>
-      <div className="display" style={{ fontSize: 44, letterSpacing: "-0.04em", fontWeight: 500 }}>{n}</div>
+      <div className="display" style={{ fontSize: "var(--t-sub)", letterSpacing: "-0.04em", fontWeight: 500 }}>{n}</div>
       <div className="meta" style={{ marginTop: 4 }}>{label}</div>
     </div>
   );
@@ -78,11 +70,11 @@ function Marquee() {
   const list = [...items, ...items];
   return (
     <div className="marquee-wrap" style={{
-      marginInline: -56,
-      paddingBlock: 24,
+      marginInline: "calc(-1 * var(--pad))",
+      paddingBlock: "var(--s-4)",
       overflow: "hidden"
     }}>
-      <div className="meta" style={{ paddingInline: 56, marginBottom: 14, color: "var(--fg-faint)" }}>
+      <div className="meta" style={{ paddingInline: "var(--pad)", marginBottom: 14, color: "var(--fg-faint)" }}>
         Selected clients & press
       </div>
       <div style={{
@@ -92,7 +84,7 @@ function Marquee() {
       }}>
         {list.map((c, i) => (
           <span key={i} className="display" style={{
-            fontSize: 40, letterSpacing: "-0.035em", color: "var(--fg)", fontWeight: 500,
+            fontSize: "var(--t-sub)", letterSpacing: "-0.035em", color: "var(--fg)", fontWeight: 500,
             fontStyle: i % 4 === 0 ? "italic" : "normal",
             opacity: .88
           }}>{c}<span style={{ margin: "0 24px", color: "var(--fg-faint)" }}>·</span></span>
@@ -105,8 +97,8 @@ function Marquee() {
 
 function Services() {
   return (
-    <div id="services" data-screen-label="03 Services" style={{ marginTop: 88 }}>
-      <div className="meta" style={{ marginBottom: 24 }}>03 — Services</div>
+    <div id="services" data-screen-label="03 Services" className="services-block">
+      <h3 className="display t-title services-head">What I shoot.</h3>
       <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 0 }}>
         {window.SERVICES.map((s, i) => (
           <ServiceRow key={s.id} idx={i + 1} {...s} />
@@ -116,36 +108,22 @@ function Services() {
   );
 }
 
+// The row used to animate its own padding on hover, which reflows the list.
+// The indent is a transform now, so the row slides instead of shoving.
 function ServiceRow({ idx, name, line }) {
-  const [hover, setHover] = React.useState(false);
   return (
-    <div
-      onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
-      className="service-row-inner"
-      style={{
-        display: "grid", gridTemplateColumns: "48px 1fr 1fr",
-        alignItems: "center", padding: "20px 0",
-        transition: "padding .25s ease, background .25s ease",
-        paddingLeft: hover ? 12 : 0, paddingRight: hover ? 12 : 0,
-        background: hover ? "color-mix(in oklch, var(--fg) 3%, transparent)" : "transparent",
-        borderRadius: 6
-      }}>
-      <span className="meta" style={{ color: "var(--fg-faint)" }}>{String(idx).padStart(2, "0")}</span>
-      <span className="display" style={{
-        fontSize: 42, letterSpacing: "-0.035em", fontWeight: 500,
-        fontStyle: hover ? "italic" : "normal", transition: "font-style .2s"
-      }}>{name}</span>
-      <span className="service-row-desc" style={{ fontSize: 13, color: "var(--fg-soft)" }}>{line}</span>
+    <div className="service-row">
+      <span className="display t-sub service-name">{name}</span>
+      <span className="service-row-desc t-body">{line}</span>
     </div>
   );
 }
 
 function Faq() {
   return (
-    <div className="faq-grid" style={{ marginTop: 96, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 64 }}>
+    <div className="faq-grid">
       <div>
-        <div className="meta" style={{ marginBottom: 20 }}>04 — Common questions</div>
-        <h3 className="display" style={{ margin: 0, fontSize: 48, letterSpacing: "-0.04em", fontWeight: 500 }}>
+        <h3 className="display t-title" style={{ margin: 0 }}>
           The boring<br /><span className="italic" style={{ opacity: .7 }}>but useful</span> bits.
         </h3>
       </div>
@@ -166,9 +144,9 @@ function FaqItem({ q, a }) {
         width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "18px 0", textAlign: "left"
       }}>
-        <span style={{ fontFamily: "var(--sans)", fontSize: 17, fontWeight: 500, letterSpacing: "-0.01em" }}>{q}</span>
+        <span style={{ fontFamily: "var(--sans)", fontSize: "var(--t-lead)", fontWeight: 500, letterSpacing: "-0.01em" }}>{q}</span>
         <span style={{
-          fontSize: 18, transition: "transform .35s ease",
+          fontSize: "var(--t-lead)", transition: "transform .35s ease",
           transform: open ? "rotate(45deg)" : "rotate(0)",
           color: "var(--fg-soft)"
         }}>+</span>
@@ -177,7 +155,7 @@ function FaqItem({ q, a }) {
         maxHeight: open ? 200 : 0, overflow: "hidden",
         transition: "max-height .5s cubic-bezier(.4,0,.2,1)"
       }}>
-        <p style={{ margin: "0 0 18px", color: "var(--fg-soft)", lineHeight: 1.6, maxWidth: "60ch", fontSize: 14 }}>{a}</p>
+        <p style={{ margin: "0 0 18px", color: "var(--fg-soft)", lineHeight: 1.6, maxWidth: "var(--measure)", fontSize: "var(--t-body)" }}>{a}</p>
       </div>
     </div>
   );

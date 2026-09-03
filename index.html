@@ -27,6 +27,23 @@
     --rail-w: 300px;
     --pad: 40px;
     --grain-opacity: .045;
+
+    /* Type scale. Six steps, each a deliberate jump — the page had nine
+       ad-hoc sizes and five competing display sizes before this. Display
+       steps are fluid; text steps are fixed because they must stay readable,
+       not decorative. */
+    --t-display: clamp(64px, 11vw, 168px);  /* the one big voice per screen */
+    --t-title:   clamp(38px, 5.2vw, 76px);  /* section titles */
+    --t-sub:     clamp(24px, 2.6vw, 34px);  /* sub-heads, lead-ins */
+    --t-lead:    18px;                      /* lead paragraphs, nav */
+    --t-body:    15px;                      /* body copy */
+    --t-fine:    11px;                      /* mono labels, meta */
+
+    /* Space scale. Section rhythm came from hardcoded per-section padding
+       (96/72/56...) which drifted every time a section was touched. */
+    --s-1: 8px;  --s-2: 16px; --s-3: 24px; --s-4: 40px;
+    --s-5: 64px; --s-6: 96px; --s-7: 140px;
+    --measure: 62ch;
     /* Confident arrival, no bounce. Every timed thing on the site uses it. */
     --ease-out: cubic-bezier(.16,1,.3,1);
     --frame-base:#e9e5dd;
@@ -66,9 +83,78 @@
   .cursor-look{cursor:zoom-in}
 
   /* Headlines: sans, tight, big */
-  .meta{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-soft)}
+  .meta{font-family:var(--mono);font-size:var(--t-fine);letter-spacing:.06em;text-transform:uppercase;color:var(--fg-soft)}
   .display{font-family:var(--sans);font-weight:500;letter-spacing:-0.035em;line-height:.92}
   .italic{font-style:italic;font-weight:400}
+
+  /* The scale, as classes. Optical tracking tightens as size grows, which is
+     what stops a big line reading as a stretched small one. */
+  .t-display{font-size:var(--t-display);line-height:.86;letter-spacing:-0.05em;font-weight:500}
+  .t-title  {font-size:var(--t-title);  line-height:.92;letter-spacing:-0.042em;font-weight:500}
+  .t-sub    {font-size:var(--t-sub);    line-height:1.12;letter-spacing:-0.03em;font-weight:500}
+  .t-lead   {font-size:var(--t-lead);   line-height:1.5; letter-spacing:-0.011em}
+  .t-body   {font-size:var(--t-body);   line-height:1.62;letter-spacing:-0.005em}
+  .t-display,.t-title,.t-sub{text-wrap:balance}
+  .measure{max-width:var(--measure)}
+
+  /* One rhythm for every section instead of per-section padding. The first
+     section opens tighter: this is a portfolio, so the work has to reach the
+     first screen rather than sit below a lobby of whitespace. */
+  .section{padding-block:var(--s-7) var(--s-6)}
+  .section + .section{padding-block-start:var(--s-6)}
+  main > .section:first-child{padding-block-start:var(--s-5)}
+  @media (max-width:760px){ .section{padding-block:var(--s-5) var(--s-5)} }
+
+  /* Work header: the title owns the screen, the count sits on its last
+     baseline rather than floating in the opposite corner. */
+  .work-head{
+    display:grid; grid-template-columns:1fr auto; align-items:end;
+    gap:var(--s-4); margin-bottom:var(--s-4);
+    border-bottom:1px solid var(--line); padding-bottom:var(--s-3);
+  }
+  .work-city{font-style:italic;font-weight:400}
+  .work-count{color:var(--fg-faint);white-space:nowrap;padding-bottom:.35em}
+  @media (max-width:760px){
+    .work-head{grid-template-columns:1fr;gap:var(--s-2);margin-bottom:var(--s-5)}
+    .work-count{padding-bottom:0}
+  }
+
+  /* Category: name and frame count share a baseline, blurb sits under it. */
+  .cat-block + .cat-block{margin-top:var(--s-7)}
+  .cat-head{display:flex;align-items:baseline;gap:var(--s-3);flex-wrap:wrap}
+  .cat-count{color:var(--fg-faint);display:inline-flex;align-items:center;gap:8px}
+  .cat-blurb{color:var(--fg-soft);margin:var(--s-2) 0 var(--s-3)}
+
+  /* About */
+  .about-grid{
+    display:grid; grid-template-columns:minmax(240px,340px) 1fr;
+    gap:var(--s-5); align-items:start; margin-bottom:var(--s-7);
+  }
+  .about-name{margin:0 0 var(--s-3)}
+  .about-lead{margin:0 0 var(--s-3);max-width:20ch;color:var(--fg)}
+  .about-body{color:var(--fg-soft);margin:0 0 var(--s-3)}
+  .about-stats{display:flex;gap:var(--s-5);margin-top:var(--s-4);flex-wrap:wrap}
+
+  /* Services: a list of names, not a table. Hover slides the row rather than
+     animating its padding, which used to reflow the whole list. */
+  .services-block{margin-top:var(--s-7)}
+  .services-head{margin:0 0 var(--s-3)}
+  .service-row{
+    display:grid; grid-template-columns:1fr 1fr; align-items:baseline;
+    gap:var(--s-3); padding:var(--s-3) 0;
+    border-top:1px solid var(--line);
+    transition:transform .3s var(--ease-out), border-color .3s var(--ease-out);
+  }
+  .service-row:last-child{border-bottom:1px solid var(--line)}
+  .service-name{font-style:normal;transition:font-style .2s}
+  .service-row-desc{color:var(--fg-soft)}
+  @media (hover:hover){
+    .service-row:hover{transform:translateX(10px);border-color:var(--line-strong)}
+    .service-row:hover .service-name{font-style:italic}
+  }
+
+  /* FAQ */
+  .faq-grid{margin-top:var(--s-7);display:grid;grid-template-columns:1fr 1fr;gap:var(--s-5)}
 
   /* Loading shimmer */
   @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
@@ -243,8 +329,8 @@
     /* About section responsive */
     .about-grid{ grid-template-columns: 1fr !important; gap: 32px !important }
     .faq-grid{ grid-template-columns: 1fr !important; gap: 40px !important }
-    .service-row-inner{ grid-template-columns: 48px 1fr !important }
-    .service-row-desc{ display:none !important }
+    .service-row{ grid-template-columns: 1fr !important; gap: 4px !important }
+    .service-row:hover{ transform:none !important }
     /* Lightbox: image full-screen, hide meta panel */
     .lightbox-inner{ grid-template-columns: 1fr !important }
     .lightbox-meta{ display:none !important }
@@ -255,8 +341,6 @@
     /* Marquee negative margin synced to --pad */
     .marquee-wrap{ margin-inline: calc(-1 * var(--pad)) !important }
     /* Section top padding */
-    #work{ padding-top: 48px !important }
-    #about{ padding-top: 48px !important }
   }
   @media (max-width: 520px){
     .footer-grid{ grid-template-columns: 1fr !important }
@@ -289,19 +373,19 @@
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
 <!-- tweaks shell -->
-<script type="text/babel" src="src/tweaks-panel.jsx?v=13"></script>
+<script type="text/babel" src="src/tweaks-panel.jsx?v=14"></script>
 
 <!-- App pieces -->
-<script type="text/babel" src="src/data.jsx?v=13"></script>
-<script type="text/babel" src="src/placeholder.jsx?v=13"></script>
-<script type="text/babel" src="src/sidebar.jsx?v=13"></script>
-<script type="text/babel" src="src/intro.jsx?v=13"></script>
-<script type="text/babel" src="src/hero.jsx?v=13"></script>
-<script type="text/babel" src="src/about.jsx?v=13"></script>
-<script type="text/babel" src="src/gallery.jsx?v=13"></script>
-<script type="text/babel" src="src/contact.jsx?v=13"></script>
-<script type="text/babel" src="src/tweaks.jsx?v=13"></script>
-<script type="text/babel" src="src/app.jsx?v=13"></script>
+<script type="text/babel" src="src/data.jsx?v=14"></script>
+<script type="text/babel" src="src/placeholder.jsx?v=14"></script>
+<script type="text/babel" src="src/sidebar.jsx?v=14"></script>
+<script type="text/babel" src="src/intro.jsx?v=14"></script>
+<script type="text/babel" src="src/hero.jsx?v=14"></script>
+<script type="text/babel" src="src/about.jsx?v=14"></script>
+<script type="text/babel" src="src/gallery.jsx?v=14"></script>
+<script type="text/babel" src="src/contact.jsx?v=14"></script>
+<script type="text/babel" src="src/tweaks.jsx?v=14"></script>
+<script type="text/babel" src="src/app.jsx?v=14"></script>
 
 <script>
   // Persistable tweak defaults

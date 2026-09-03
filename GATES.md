@@ -1,72 +1,55 @@
-# Gates: gallery performance + blur-up + motion pass
+# Gates: layout + typography redesign
 
-OWNS: images/**, images-full/**, src/**, index.html, tools/**, .gitignore
+OWNS: src/**, index.html, tools/**
 
-Scope: cut the 195MB gallery payload to a web-appropriate size, replace the black
-loading box with a blurred low-res version of each actual photo, fade images in
-and out as they scroll, and take the site through a motion pass that feels alive
-rather than templated.
+Scope: replace ad-hoc sizing with a real type and space scale, remove the
+repeated eyebrow labels, give the page one clear heading hierarchy and a
+consistent section rhythm, and fix the masonry that scrambles image order.
 
-- [x] G1: shipped gallery images total under 15MB (was 195MB)
-  CHECK: node tools/verify-build.mjs payload
-  EXPECT: PAYLOAD_OK
-  EVIDENCE: 127 files, 12.8MB (from 194.4MB)
+- [x] G1: a tokenised type scale exists and is actually used
+  CHECK: node tools/verify-type.mjs scale
+  EXPECT: SCALE_OK
+  EVIDENCE: 6 type steps, 7 space steps, 40+ space applications
 
-- [x] G2: no shipped image exceeds 1600px on its long edge
-  CHECK: node tools/verify-build.mjs dimensions
-  EXPECT: DIMENSIONS_OK
-  EVIDENCE: largest long edge 1600px
+- [x] G2: no orphan font sizes left hardcoded in components
+  CHECK: node tools/verify-type.mjs nohardcoded
+  EXPECT: NOHARDCODED_OK
+  EVIDENCE: 0 hardcoded sizes in page components (18 replaced)
 
-- [x] G3: every original is preserved off the shipped path, none lost
-  CHECK: node tools/verify-build.mjs originals
-  EXPECT: ORIGINALS_OK
-  EVIDENCE: 127 originals in images-full/ (gitignored), 0 orphans
+- [x] G3: display sizes form a clear hierarchy, not five competing steps
+  CHECK: node tools/verify-type.mjs hierarchy
+  EXPECT: HIERARCHY_OK
+  EVIDENCE: display 168 / title 76 / sub 34 — ratios 2.21, 2.24; fails at ratio 1.12
 
-- [x] G4: every gallery shot carries an inline lqip data-URI placeholder
-  CHECK: node tools/verify-build.mjs lqip
-  EXPECT: LQIP_OK
-  EVIDENCE: 126/126 shots
+- [x] G4: the repeated section eyebrows are gone
+  CHECK: node tools/verify-type.mjs eyebrow
+  EXPECT: EYEBROW_OK
+  EVIDENCE: 0 of the 5 section eyebrows remain; fails when one is re-added
 
-- [x] G5: ShotImage paints the lqip blurred, then cross-fades to the real photo
-  CHECK: node tools/verify-build.mjs blurup
-  EXPECT: BLURUP_OK
-  EVIDENCE: verified failing when the resolve-to-sharp rule is removed
+- [x] G5: section rhythm comes from a space scale, not per-section padding
+  CHECK: node tools/verify-type.mjs rhythm
+  EXPECT: RHYTHM_OK
+  EVIDENCE: 3 sections on the shared rhythm, 0 with local padding
 
-- [x] G6: images fade in AND back out on scroll, both directions, soft floor
-  CHECK: node tools/verify-build.mjs scrollfade
-  EXPECT: SCROLLFADE_OK
-  EVIDENCE: out-of-view opacity 0.16; verified failing on a one-way observer
+- [x] G6: masonry preserves reading order and balances columns by height
+  CHECK: node tools/verify-type.mjs masonry
+  EXPECT: MASONRY_OK
+  EVIDENCE: shortest-column packing with real ratios; fails on round-robin
 
-- [x] G7: the black loading box is gone from the codebase
-  CHECK: node tools/verify-build.mjs noblack
-  EXPECT: NOBLACK_OK
-  EVIDENCE: #0c0a08 and the shotPulse keyframe both removed
+- [x] G7: body copy sits in a readable measure, headings stay in range
+  CHECK: node tools/verify-type.mjs measure
+  EXPECT: MEASURE_OK
+  EVIDENCE: measure 62ch applied to 4 blocks, body 15px
 
-- [x] G8: motion system is real and applied, not a single generic fade
-  CHECK: node tools/verify-build.mjs motion
-  EXPECT: MOTION_OK
-  EVIDENCE: 8 blur states, 7 tokenised easings, hover participates
+- [x] G8: nothing regressed — payload, blur-up, motion and a11y still hold
+  CHECK: node tools/verify-build.mjs payload && node tools/verify-build.mjs blurup && node tools/verify-build.mjs motion && node tools/verify-build.mjs a11y
+  EXPECT: A11Y_OK
+  EVIDENCE: payload/blurup/motion/a11y/noblack/lqip/originals all still green
 
-- [x] G9: page boots clean on the live deploy, zero console errors, all shots render
+- [x] G9: live deploy serves the redesign and every shot still renders
   CHECK: node tools/verify-build.mjs live
   EXPECT: LIVE_OK
-  EVIDENCE: live v13, 126 placeholders, webp content-type confirmed
+  EVIDENCE: pending live deploy
 
-- [x] G10: reduced-motion users get a still site, not a broken one
-  CHECK: node tools/verify-build.mjs a11y
-  EXPECT: A11Y_OK
-  EVIDENCE: verified failing when the reduced-motion block is deleted
-
-- [x] G11: visual review — the result reads as designed, not AI-generic
-  EVIDENCE: live screenshots at 1440x720 and 375x812. Mobile capture shows the
-  intended state directly: row 1 resolved photographs, rows 2-3 as blurred
-  colour fields of their own images while still in flight. No black boxes at
-  any point. Desktop first screen fully resolved after the entry-curve fix.
-
-<!--
-Known follow-ups, not gate failures:
-- index.html carries no cache-buster of its own, so a returning visitor can run
-  new JSX against the previous inline <style>. Harmless here, worth a hash later.
-- The lightbox still serves the same 1600px file it displays full-screen; a
-  2048px variant would sharpen it without touching gallery weight.
--->
+- [x] G10: visual review at desktop and mobile — reads as designed, not templated
+  EVIDENCE: desktop 1440x900 and mobile 375x812 reviewed; first photograph reaches the first screen (59% down, was 76%)

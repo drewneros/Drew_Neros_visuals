@@ -21,23 +21,17 @@ function GallerySection({ tweaks }){
   }, []);
 
   return (
-    <section id="work" data-screen-label="01 Work" style={{padding:"72px 56px 80px"}}>
-      <div style={{
-        display:"flex", justifyContent:"space-between", alignItems:"baseline",
-        marginBottom:40,
-      }}>
-        <div>
-          <div className="meta" style={{marginBottom:12}}>01 — Selected work</div>
-          <h2 className="display" style={{
-            margin:0, fontSize:"clamp(56px, 8vw, 120px)", letterSpacing:"-0.04em", fontWeight:500,
-          }}>
-            {city ? `Work in ${city}.` : "Work."}
-          </h2>
-        </div>
-        <div className="meta" style={{textAlign:"right", color:"var(--fg-soft)"}}>
-          {shotCount} works · {window.CATEGORIES.length} categories
-        </div>
-      </div>
+    <section id="work" data-screen-label="01 Work" className="section">
+      {/* No eyebrow. The heading is the label — and where he is working right
+          now is the one piece of information a visiting agency actually wants. */}
+      <header className="work-head">
+        <h2 className="display t-display" style={{margin:0}}>
+          {city ? <>Work in <span className="work-city">{city}</span>.</> : "Work."}
+        </h2>
+        <p className="meta work-count">
+          {shotCount} frames, {window.CATEGORIES.length} bodies of work
+        </p>
+      </header>
 
       <CategoryGalleries tweaks={tweaks} />
     </section>
@@ -65,7 +59,7 @@ function CategoryGalleries({ tweaks }){
         display:"flex", flexDirection:"column", alignItems:"center", gap:16,
       }}>
         <div className="meta" style={{color:"var(--fg-faint)"}}>No images published yet</div>
-        <p style={{fontSize:14, color:"var(--fg-soft)", maxWidth:"36ch", margin:0, lineHeight:1.6}}>
+        <p className="t-body" style={{color:"var(--fg-soft)", maxWidth:"36ch", margin:0}}>
           No images published yet.
         </p>
       </div>
@@ -86,34 +80,22 @@ function CategoryBlock({ cat, idx, density, onOpen }){
   const shots = window.ALL_SHOTS.filter(s => s.cat === cat.id);
   if (!shots.length) return null;
   const cols = density === "compact" ? 4 : density === "loose" ? 2 : 3;
+  const ratios = shots.map(s => (s.ah || 5) / (s.aw || 4));
   return (
-    <div>
-      <div className="cat-header" style={{
-        display:"grid", gridTemplateColumns:"auto 1fr auto",
-        alignItems:"end", gap:24, marginBottom:20,
-      }}>
-        <div className="meta" style={{color:"var(--fg-faint)"}}>
-          {String(idx+1).padStart(2,"0")} / {String(window.CATEGORIES.length).padStart(2,"0")}
-        </div>
-        <h3 className="display" style={{
-          margin:0, fontSize:"clamp(36px, 4.5vw, 64px)", letterSpacing:"-0.035em", fontWeight:500,
-        }}>
-          {cat.name}
-        </h3>
-        <div className="cat-chip" style={{display:"flex", alignItems:"center", gap:14}}>
-          <span className="chip">
-            <span className="dot" style={{background:cat.accent}}/>
-            {shots.length} frames
-          </span>
-        </div>
+    <div className="cat-block">
+      {/* Title and count on one baseline. The old "01 / 03" counter told the
+          reader nothing they could not see; the frame count does. */}
+      <div className="cat-head">
+        <h3 className="display t-title" style={{margin:0}}>{cat.name}</h3>
+        <span className="meta cat-count">
+          <span className="dot" style={{background:cat.accent}}/>
+          {shots.length} frames
+        </span>
       </div>
 
-      <p style={{
-        fontSize:14, color:"var(--fg-soft)",
-        maxWidth:"54ch", margin:"0 0 24px",
-      }}>{cat.blurb}</p>
+      <p className="t-body measure cat-blurb">{cat.blurb}</p>
 
-      <Masonry cols={cols} gap={12}>
+      <Masonry cols={cols} gap={12} ratios={ratios}>
         {shots.map((s, i) => (
           <button
             key={s.id}
@@ -128,10 +110,20 @@ function CategoryBlock({ cat, idx, density, onOpen }){
   );
 }
 
-function Masonry({cols=3, gap=16, children}){
+// `i % cols` dealt images across columns like cards, which both scrambled the
+// reading order and left ragged columns whenever the aspect ratios differed.
+// Placing each next image into whichever column is currently shortest keeps the
+// order intact and evens the bottoms out.
+function Masonry({cols=3, gap=16, ratios=[], children}){
   const arr = React.Children.toArray(children);
   const columns = Array.from({length: cols}, () => []);
-  arr.forEach((child, i) => columns[i % cols].push(child));
+  const heights = new Array(cols).fill(0);
+  arr.forEach((child, i) => {
+    let c = 0;
+    for (let k = 1; k < cols; k++) if (heights[k] < heights[c]) c = k;
+    columns[c].push(child);
+    heights[c] += (ratios[i] || 1.25) + 0.05; // ratio is height per unit width
+  });
   return (
     <div style={{display:"grid", gridTemplateColumns:`repeat(${cols}, 1fr)`, gap}}>
       {columns.map((col, i) => (
@@ -181,14 +173,14 @@ function Lightbox({shot, onClose}){
         <button onClick={onClose} className="meta" style={{
           alignSelf:"flex-end", color:"rgba(255,255,255,.7)",
           display:"flex", alignItems:"center", gap:8,
-        }}>Close <span style={{fontSize:14}}>✕</span></button>
+        }}>Close <span style={{fontSize:"var(--t-body)"}}>✕</span></button>
 
         <div className="meta" style={{color:"rgba(255,255,255,.5)"}}>{shot.code} · {shot.year}</div>
-        <h4 className="display" style={{margin:0, fontSize:36, letterSpacing:"-0.02em"}}>{shot.label}</h4>
+        <h4 className="display t-sub" style={{margin:0}}>{shot.label}</h4>
 
         <div>
           <div className="meta" style={{color:"rgba(255,255,255,.5)", marginBottom:10}}>AI-generated alt text</div>
-          <p style={{fontSize:14, lineHeight:1.6, color:"rgba(244,241,234,.92)", margin:0}}>
+          <p className="t-body" style={{color:"rgba(244,241,234,.92)", margin:0}}>
             {shot.alt || altText}
           </p>
         </div>
@@ -211,7 +203,7 @@ function Tag({label,value}){
   return (
     <div>
       <div className="meta" style={{color:"rgba(255,255,255,.45)"}}>{label}</div>
-      <div style={{fontFamily:"var(--mono)", fontSize:14, marginTop:4}}>{value}</div>
+      <div style={{fontFamily:"var(--mono)", fontSize:"var(--t-body)", marginTop:4}}>{value}</div>
     </div>
   );
 }
