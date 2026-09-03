@@ -37,28 +37,55 @@ function Sidebar({ tweaks, setTweak, onNav, current, onOpenAdmin, slideIn = true
   const side = tweaks.menuSide === "right" ? "right" : "left";
   const [cityMenu, setCityMenu] = _useState(false);
 
-  // Rail auto-minimizes once you scroll past the top region; hovering it (or
-  // scrolling back to the top) expands it again.
+  // Rail auto-minimizes once you scroll past the top region. Expands on hover,
+  // on scroll-back-to-top, or when the user clicks the minimized tab to pin it.
   const [scrolled, setScrolled] = _useState(false);
   const [hover, setHover] = _useState(false);
-  const collapsed = scrolled && !hover;
+  const [pinned, setPinned] = _useState(false); // user clicked the tab open
+  const [isMobile, setIsMobile] = _useState(
+    typeof window !== "undefined" && window.matchMedia("(max-width: 860px)").matches
+  );
+  const [mobileOpen, setMobileOpen] = _useState(false);
+
+  const collapsed = !isMobile && scrolled && !hover && !pinned;
 
   _useEffect(() => {
     const THRESHOLD = 220; // px scrolled before the rail minimizes
-    const onScroll = () => setScrolled(window.scrollY > THRESHOLD);
+    const onScroll = () => {
+      const past = window.scrollY > THRESHOLD;
+      setScrolled(past);
+      if (!past) setPinned(false); // back at the top: forget the pin
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Reflow <main> to reclaim the space (desktop only, via index.html rule).
-  // Follows `scrolled`, not `collapsed`, so a hover-expand overlays content
-  // instead of shoving it around. ponytail: left-side menu only; if menuSide
-  // ever defaults to "right", add the mirror rule.
   _useEffect(() => {
-    document.body.classList.toggle("rail-min", scrolled);
+    const mq = window.matchMedia("(max-width: 860px)");
+    const on = () => { setIsMobile(mq.matches); if (!mq.matches) setMobileOpen(false); };
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
+
+  // Mobile drawer: CSS (index.html, <=860px) owns the slide + width via a
+  // .nav-open class on <html>. Doing it in CSS instead of inline style avoids
+  // races with React re-renders and the intro's slideIn transform.
+  _useEffect(() => {
+    document.documentElement.classList.toggle("nav-open", mobileOpen);
+    if (isMobile) document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => {
+      document.documentElement.classList.remove("nav-open");
+      document.body.style.overflow = "";
+    };
+  }, [isMobile, mobileOpen]);
+
+  // Reflow <main> to reclaim the space (desktop only, via index.html rule).
+  // Follows the minimized state so a hover/pin expand overlays content.
+  _useEffect(() => {
+    document.body.classList.toggle("rail-min", !isMobile && scrolled);
     return () => document.body.classList.remove("rail-min");
-  }, [scrolled]);
+  }, [scrolled, isMobile]);
 
   // Auto-detect location from IP; falls back to manual clockCity tweak
   const [geo, setGeo] = _useState(null); // { city, code, tz }
@@ -98,40 +125,85 @@ function Sidebar({ tweaks, setTweak, onNav, current, onOpenAdmin, slideIn = true
   const cities = ["Sydney","Melbourne","NYC","LA","London","Paris","Lisbon","Istanbul","Belgrade","Tokyo","Dubai","Bali"];
 
   return (
+    <>
+    {/* Mobile: hamburger toggle (CSS shows it only <=860px) */}
+    <button
+      className="mobile-menu-btn"
+      aria-label={mobileOpen ? "Close menu" : "Open menu"}
+      aria-expanded={mobileOpen}
+      onClick={() => setMobileOpen(v => !v)}
+      style={{
+        position:"fixed", top:14, [side]:14, zIndex:50,
+        width:44, height:44, borderRadius:12,
+        display:"none", alignItems:"center", justifyContent:"center",
+        gap:4, flexDirection:"column",
+        background:"var(--bg)", border:"1px solid var(--line-strong)",
+      }}
+    >
+      {[0,1,2].map(i => (
+        <span key={i} style={{
+          width:18, height:1.5, background:"var(--fg)",
+          transition:"transform .25s ease, opacity .2s ease",
+          transform: mobileOpen
+            ? (i === 0 ? "translateY(5.5px) rotate(45deg)" : i === 2 ? "translateY(-5.5px) rotate(-45deg)" : "none")
+            : "none",
+          opacity: mobileOpen && i === 1 ? 0 : 1,
+        }}/>
+      ))}
+    </button>
+
+    {/* Mobile drawer backdrop */}
+    {isMobile && (
+      <div onClick={() => setMobileOpen(false)} style={{
+        position:"fixed", inset:0, zIndex:39,
+        background:"rgba(10,10,9,.4)",
+        opacity: mobileOpen ? 1 : 0,
+        pointerEvents: mobileOpen ? "auto" : "none",
+        transition:"opacity .3s ease",
+      }}/>
+    )}
+
     <aside
       className="sidebar-desktop"
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
+      onMouseEnter={() => !isMobile && setHover(true)}
+      onMouseLeave={() => !isMobile && setHover(false)}
+      onClick={() => { if (!isMobile && collapsed) setPinned(true); }}
       style={{
         position:"fixed", top:0, [side]:0, height:"100vh",
-        width: collapsed ? "72px" : "var(--rail-w)",
-        padding:"32px 36px 28px", boxSizing:"border-box",
+        width: isMobile ? "min(320px, 82vw)" : (collapsed ? "56px" : "var(--rail-w)"),
+        padding: collapsed ? "32px 8px 28px" : "32px 36px 28px", boxSizing:"border-box",
         display:"flex", flexDirection:"column",
         background:"var(--bg)",
         borderRight: side === "left" ? "1px solid var(--line)" : "none",
         borderLeft: side === "right" ? "1px solid var(--line)" : "none",
         overflow:"hidden",
-        zIndex:30,
+        cursor: (!isMobile && collapsed) ? "pointer" : "default",
+        zIndex:40,
+        boxShadow: (isMobile && mobileOpen) ? "0 0 60px rgba(0,0,0,.25)" : "none",
         transform: slideIn ? "translateX(0)" : (side === "left" ? "translateX(-100%)" : "translateX(100%)"),
-        transition: (slideIn ? "transform .85s cubic-bezier(.2,.7,.2,1), " : "") + "width .4s cubic-bezier(.2,.7,.2,1)",
+        transition: "transform .4s cubic-bezier(.2,.7,.2,1), width .4s cubic-bezier(.2,.7,.2,1), padding .4s ease",
         willChange:"transform, width",
       }}
     >
-      {/* Minimized affordance — only visible when collapsed */}
+      {/* Minimized tab — the clickable affordance when collapsed */}
       <div aria-hidden={!collapsed} style={{
         position:"absolute", inset:0, zIndex:1,
         display:"flex", flexDirection:"column", alignItems:"center",
-        paddingTop:36, gap:16,
+        paddingTop:34, gap:14,
         opacity: collapsed ? 1 : 0,
         pointerEvents:"none",
         transition:"opacity .25s ease",
       }}>
-        <span className="display" style={{fontSize:22, fontWeight:600, letterSpacing:"-0.045em"}}>
+        <span className="display" style={{fontSize:18, fontWeight:600, letterSpacing:"-0.045em"}}>
           D<span style={{opacity:.35}}>_</span>N
         </span>
-        <span style={{display:"flex", flexDirection:"column", gap:5, marginTop:8}}>
+        <span title="Open menu" style={{
+          display:"flex", flexDirection:"column", alignItems:"center", gap:4,
+          padding:"8px 7px", borderRadius:9,
+          border:"1px solid var(--line-strong)",
+        }}>
           {[0,1,2].map(i => (
-            <span key={i} style={{width:18, height:1.5, background:"var(--fg)", opacity:.5}}/>
+            <span key={i} style={{width:16, height:1.5, background:"var(--fg)", opacity:.65}}/>
           ))}
         </span>
       </div>
@@ -143,6 +215,20 @@ function Sidebar({ tweaks, setTweak, onNav, current, onOpenAdmin, slideIn = true
         pointerEvents: collapsed ? "none" : "auto",
         transition:"opacity .2s ease",
       }}>
+      {/* Pinned-open: small control to re-collapse (desktop, scrolled) */}
+      {!isMobile && pinned && scrolled && (
+        <button
+          onClick={(e) => { e.stopPropagation(); setPinned(false); setHover(false); }}
+          className="meta"
+          style={{
+            position:"absolute", top:8, [side === "left" ? "right" : "left"]:8, zIndex:2,
+            width:26, height:26, borderRadius:8,
+            display:"flex", alignItems:"center", justifyContent:"center",
+            border:"1px solid var(--line-strong)", color:"var(--fg-soft)",
+          }}
+          title="Minimize menu"
+        >{side === "left" ? "‹" : "›"}</button>
+      )}
       {/* Clock row + clickable city */}
       <div className="meta" style={{display:"flex",gap:14,alignItems:"center",justifyContent:"space-between"}}>
         <span style={{fontVariantNumeric:"tabular-nums"}}>{clock.day} <span style={{opacity:.4,margin:"0 4px"}}>·</span> {clock.time}</span>
@@ -193,7 +279,7 @@ function Sidebar({ tweaks, setTweak, onNav, current, onOpenAdmin, slideIn = true
 
       {/* Brand */}
       <div style={{marginTop:44}}>
-        <button onClick={() => onNav && onNav("top")} style={{textAlign:"left"}}>
+        <button onClick={() => { onNav && onNav("top"); setMobileOpen(false); }} style={{textAlign:"left"}}>
           <div className="display" style={{fontSize:36, lineHeight:1, letterSpacing:"-0.045em", fontWeight:600}}>
             Drew<span style={{opacity:.35, margin:"0 1px"}}>_</span>Neros<span style={{opacity:.5}}>.</span>
           </div>
@@ -216,7 +302,7 @@ function Sidebar({ tweaks, setTweak, onNav, current, onOpenAdmin, slideIn = true
           const active = current === it.id;
           return (
             <button key={it.id}
-              onClick={() => onNav && onNav(it.id)}
+              onClick={() => { onNav && onNav(it.id); setMobileOpen(false); }}
               style={{
                 display:"flex", alignItems:"center", gap:14,
                 padding:"6px 0",
@@ -255,6 +341,7 @@ function Sidebar({ tweaks, setTweak, onNav, current, onOpenAdmin, slideIn = true
       </div>
       </div>
     </aside>
+    </>
   );
 }
 

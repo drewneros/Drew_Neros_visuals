@@ -148,17 +148,25 @@
   }
   @media (max-width: 860px){
     :root{ --rail-w: 0px; --pad: 20px; }
-    /* hide the desktop sidebar; mobile bar takes over */
-    .sidebar-desktop{ display:none !important }
-    main{ margin-left:0 !important; margin-right:0 !important; padding-top:60px }
+    /* rail becomes an off-canvas drawer; hamburger toggles it */
+    main{ margin-left:0 !important; margin-right:0 !important; padding-top:64px }
+    .mobile-menu-btn{ display:flex !important }
+    .sidebar-desktop{
+      width: min(322px, 84vw) !important;
+      padding: 30px 26px 26px !important;
+      transition: transform .38s cubic-bezier(.2,.7,.2,1) !important;
+    }
+    html:not(.nav-open) .sidebar-desktop{ transform: translateX(-102%) !important }
+    html.nav-open .sidebar-desktop{ transform: translateX(0) !important }
   }
   @media (min-width: 861px){
     .mobile-bar{ display:none !important }
+    .mobile-menu-btn{ display:none !important }
   }
   /* Auto-minimizing left rail: reclaim space once scrolled past the top */
   main{ transition: margin-left .4s cubic-bezier(.2,.7,.2,1) }
   @media (min-width: 861px){
-    body.rail-min main{ margin-left: 72px !important }
+    body.rail-min main{ margin-left: 56px !important }
   }
   /* Section padding scales */
   section{ padding-left: var(--pad) !important; padding-right: var(--pad) !important; }
@@ -205,19 +213,19 @@
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
 <!-- tweaks shell -->
-<script type="text/babel" src="src/tweaks-panel.jsx?v=6"></script>
+<script type="text/babel" src="src/tweaks-panel.jsx?v=10"></script>
 
 <!-- App pieces -->
-<script type="text/babel" src="src/data.jsx?v=6"></script>
-<script type="text/babel" src="src/placeholder.jsx?v=6"></script>
-<script type="text/babel" src="src/sidebar.jsx?v=6"></script>
-<script type="text/babel" src="src/intro.jsx?v=6"></script>
-<script type="text/babel" src="src/hero.jsx?v=6"></script>
-<script type="text/babel" src="src/about.jsx?v=6"></script>
-<script type="text/babel" src="src/gallery.jsx?v=6"></script>
-<script type="text/babel" src="src/contact.jsx?v=6"></script>
-<script type="text/babel" src="src/tweaks.jsx?v=6"></script>
-<script type="text/babel" src="src/app.jsx?v=6"></script>
+<script type="text/babel" src="src/data.jsx?v=10"></script>
+<script type="text/babel" src="src/placeholder.jsx?v=10"></script>
+<script type="text/babel" src="src/sidebar.jsx?v=10"></script>
+<script type="text/babel" src="src/intro.jsx?v=10"></script>
+<script type="text/babel" src="src/hero.jsx?v=10"></script>
+<script type="text/babel" src="src/about.jsx?v=10"></script>
+<script type="text/babel" src="src/gallery.jsx?v=10"></script>
+<script type="text/babel" src="src/contact.jsx?v=10"></script>
+<script type="text/babel" src="src/tweaks.jsx?v=10"></script>
+<script type="text/babel" src="src/app.jsx?v=10"></script>
 
 <script>
   // Persistable tweak defaults
