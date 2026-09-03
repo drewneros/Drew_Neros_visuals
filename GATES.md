@@ -63,8 +63,6 @@ rather than templated.
   colour fields of their own images while still in flight. No black boxes at
   any point. Desktop first screen fully resolved after the entry-curve fix.
 
-ABANDON: none.
-
 <!--
 Known follow-ups, not gate failures:
 - index.html carries no cache-buster of its own, so a returning visitor can run
