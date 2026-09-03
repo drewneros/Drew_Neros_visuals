@@ -151,11 +151,14 @@ function FaqItem({ q, a }) {
           color: "var(--fg-soft)"
         }}>+</span>
       </button>
-      <div style={{
-        maxHeight: open ? 200 : 0, overflow: "hidden",
-        transition: "max-height .5s cubic-bezier(.4,0,.2,1)"
-      }}>
-        <p style={{ margin: "0 0 18px", color: "var(--fg-soft)", lineHeight: 1.6, maxWidth: "var(--measure)", fontSize: "var(--t-body)" }}>{a}</p>
+      {/* Was `maxHeight: open ? 200 : 0`, which both thrashed layout every
+          frame and silently clipped any answer taller than 200px. A 0fr -> 1fr
+          grid track animates to the content's real height, so a longer answer
+          can never be truncated. */}
+      <div className={`faq-panel${open ? " is-open" : ""}`}>
+        <div className="faq-panel-inner">
+          <p className="t-body measure faq-answer">{a}</p>
+        </div>
       </div>
     </div>
   );

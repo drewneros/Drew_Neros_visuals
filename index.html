@@ -155,6 +155,11 @@
 
   /* FAQ */
   .faq-grid{margin-top:var(--s-7);display:grid;grid-template-columns:1fr 1fr;gap:var(--s-5)}
+  /* 0fr -> 1fr resolves to the answer's real height, so nothing is clipped. */
+  .faq-panel{display:grid;grid-template-rows:0fr;transition:grid-template-rows .45s var(--ease-out)}
+  .faq-panel.is-open{grid-template-rows:1fr}
+  .faq-panel-inner{overflow:hidden;min-height:0}
+  .faq-answer{color:var(--fg-soft);margin:0 0 var(--s-2)}
 
   /* Loading shimmer */
   @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
@@ -373,19 +378,19 @@
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
 <!-- tweaks shell -->
-<script type="text/babel" src="src/tweaks-panel.jsx?v=14"></script>
+<script type="text/babel" src="src/tweaks-panel.jsx?v=15"></script>
 
 <!-- App pieces -->
-<script type="text/babel" src="src/data.jsx?v=14"></script>
-<script type="text/babel" src="src/placeholder.jsx?v=14"></script>
-<script type="text/babel" src="src/sidebar.jsx?v=14"></script>
-<script type="text/babel" src="src/intro.jsx?v=14"></script>
-<script type="text/babel" src="src/hero.jsx?v=14"></script>
-<script type="text/babel" src="src/about.jsx?v=14"></script>
-<script type="text/babel" src="src/gallery.jsx?v=14"></script>
-<script type="text/babel" src="src/contact.jsx?v=14"></script>
-<script type="text/babel" src="src/tweaks.jsx?v=14"></script>
-<script type="text/babel" src="src/app.jsx?v=14"></script>
+<script type="text/babel" src="src/data.jsx?v=15"></script>
+<script type="text/babel" src="src/placeholder.jsx?v=15"></script>
+<script type="text/babel" src="src/sidebar.jsx?v=15"></script>
+<script type="text/babel" src="src/intro.jsx?v=15"></script>
+<script type="text/babel" src="src/hero.jsx?v=15"></script>
+<script type="text/babel" src="src/about.jsx?v=15"></script>
+<script type="text/babel" src="src/gallery.jsx?v=15"></script>
+<script type="text/babel" src="src/contact.jsx?v=15"></script>
+<script type="text/babel" src="src/tweaks.jsx?v=15"></script>
+<script type="text/babel" src="src/app.jsx?v=15"></script>
 
 <script>
   // Persistable tweak defaults
