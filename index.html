@@ -70,6 +70,8 @@
   @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
   @keyframes blink{50%{opacity:.25}}
   .blink{animation:blink 1.4s steps(2) infinite}
+  @keyframes shotPulse{0%,100%{background-color:#0c0a08}50%{background-color:#1a1712}}
+  .shot-img:not(.is-loaded){animation:shotPulse 1.6s ease-in-out infinite}
 
   /* Reveal animations — eager so content doesn't feel like it's loading */
   [data-reveal]{opacity:0;transform:translateY(10px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1)}
@@ -153,6 +155,11 @@
   @media (min-width: 861px){
     .mobile-bar{ display:none !important }
   }
+  /* Auto-minimizing left rail: reclaim space once scrolled past the top */
+  main{ transition: margin-left .4s cubic-bezier(.2,.7,.2,1) }
+  @media (min-width: 861px){
+    body.rail-min main{ margin-left: 72px !important }
+  }
   /* Section padding scales */
   section{ padding-left: var(--pad) !important; padding-right: var(--pad) !important; }
   /* Stack 2-column grids on small screens */
@@ -198,19 +205,19 @@
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
 <!-- tweaks shell -->
-<script type="text/babel" src="src/tweaks-panel.jsx?v=4"></script>
+<script type="text/babel" src="src/tweaks-panel.jsx?v=6"></script>
 
 <!-- App pieces -->
-<script type="text/babel" src="src/data.jsx?v=4"></script>
-<script type="text/babel" src="src/placeholder.jsx?v=4"></script>
-<script type="text/babel" src="src/sidebar.jsx?v=4"></script>
-<script type="text/babel" src="src/intro.jsx?v=4"></script>
-<script type="text/babel" src="src/hero.jsx?v=4"></script>
-<script type="text/babel" src="src/about.jsx?v=4"></script>
-<script type="text/babel" src="src/gallery.jsx?v=4"></script>
-<script type="text/babel" src="src/contact.jsx?v=4"></script>
-<script type="text/babel" src="src/tweaks.jsx?v=4"></script>
-<script type="text/babel" src="src/app.jsx?v=4"></script>
+<script type="text/babel" src="src/data.jsx?v=6"></script>
+<script type="text/babel" src="src/placeholder.jsx?v=6"></script>
+<script type="text/babel" src="src/sidebar.jsx?v=6"></script>
+<script type="text/babel" src="src/intro.jsx?v=6"></script>
+<script type="text/babel" src="src/hero.jsx?v=6"></script>
+<script type="text/babel" src="src/about.jsx?v=6"></script>
+<script type="text/babel" src="src/gallery.jsx?v=6"></script>
+<script type="text/babel" src="src/contact.jsx?v=6"></script>
+<script type="text/babel" src="src/tweaks.jsx?v=6"></script>
+<script type="text/babel" src="src/app.jsx?v=6"></script>
 
 <script>
   // Persistable tweak defaults

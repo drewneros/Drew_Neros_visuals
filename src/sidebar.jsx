@@ -37,6 +37,29 @@ function Sidebar({ tweaks, setTweak, onNav, current, onOpenAdmin, slideIn = true
   const side = tweaks.menuSide === "right" ? "right" : "left";
   const [cityMenu, setCityMenu] = _useState(false);
 
+  // Rail auto-minimizes once you scroll past the top region; hovering it (or
+  // scrolling back to the top) expands it again.
+  const [scrolled, setScrolled] = _useState(false);
+  const [hover, setHover] = _useState(false);
+  const collapsed = scrolled && !hover;
+
+  _useEffect(() => {
+    const THRESHOLD = 220; // px scrolled before the rail minimizes
+    const onScroll = () => setScrolled(window.scrollY > THRESHOLD);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Reflow <main> to reclaim the space (desktop only, via index.html rule).
+  // Follows `scrolled`, not `collapsed`, so a hover-expand overlays content
+  // instead of shoving it around. ponytail: left-side menu only; if menuSide
+  // ever defaults to "right", add the mirror rule.
+  _useEffect(() => {
+    document.body.classList.toggle("rail-min", scrolled);
+    return () => document.body.classList.remove("rail-min");
+  }, [scrolled]);
+
   // Auto-detect location from IP; falls back to manual clockCity tweak
   const [geo, setGeo] = _useState(null); // { city, code, tz }
   const [manualCity, setManualCity] = _useState(null); // set when user picks from menu
@@ -77,17 +100,49 @@ function Sidebar({ tweaks, setTweak, onNav, current, onOpenAdmin, slideIn = true
   return (
     <aside
       className="sidebar-desktop"
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
       style={{
-        position:"fixed", top:0, [side]:0, height:"100vh", width:"var(--rail-w)",
+        position:"fixed", top:0, [side]:0, height:"100vh",
+        width: collapsed ? "72px" : "var(--rail-w)",
         padding:"32px 36px 28px", boxSizing:"border-box",
         display:"flex", flexDirection:"column",
         background:"var(--bg)",
+        borderRight: side === "left" ? "1px solid var(--line)" : "none",
+        borderLeft: side === "right" ? "1px solid var(--line)" : "none",
+        overflow:"hidden",
         zIndex:30,
         transform: slideIn ? "translateX(0)" : (side === "left" ? "translateX(-100%)" : "translateX(100%)"),
-        transition: slideIn ? "transform .85s cubic-bezier(.2,.7,.2,1)" : "none",
-        willChange:"transform",
+        transition: (slideIn ? "transform .85s cubic-bezier(.2,.7,.2,1), " : "") + "width .4s cubic-bezier(.2,.7,.2,1)",
+        willChange:"transform, width",
       }}
     >
+      {/* Minimized affordance — only visible when collapsed */}
+      <div aria-hidden={!collapsed} style={{
+        position:"absolute", inset:0, zIndex:1,
+        display:"flex", flexDirection:"column", alignItems:"center",
+        paddingTop:36, gap:16,
+        opacity: collapsed ? 1 : 0,
+        pointerEvents:"none",
+        transition:"opacity .25s ease",
+      }}>
+        <span className="display" style={{fontSize:22, fontWeight:600, letterSpacing:"-0.045em"}}>
+          D<span style={{opacity:.35}}>_</span>N
+        </span>
+        <span style={{display:"flex", flexDirection:"column", gap:5, marginTop:8}}>
+          {[0,1,2].map(i => (
+            <span key={i} style={{width:18, height:1.5, background:"var(--fg)", opacity:.5}}/>
+          ))}
+        </span>
+      </div>
+
+      {/* Full rail content — fades out when collapsed */}
+      <div style={{
+        display:"flex", flexDirection:"column", flex:"1 1 auto", minHeight:0,
+        opacity: collapsed ? 0 : 1,
+        pointerEvents: collapsed ? "none" : "auto",
+        transition:"opacity .2s ease",
+      }}>
       {/* Clock row + clickable city */}
       <div className="meta" style={{display:"flex",gap:14,alignItems:"center",justifyContent:"space-between"}}>
         <span style={{fontVariantNumeric:"tabular-nums"}}>{clock.day} <span style={{opacity:.4,margin:"0 4px"}}>·</span> {clock.time}</span>
@@ -197,6 +252,7 @@ function Sidebar({ tweaks, setTweak, onNav, current, onOpenAdmin, slideIn = true
           <span className="dot blink" style={{width:7,height:7,borderRadius:999,background:"var(--film-olive)"}}/>
           <span>Booking — Summer '26</span>
         </div>
+      </div>
       </div>
     </aside>
   );

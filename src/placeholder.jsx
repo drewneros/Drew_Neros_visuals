@@ -272,17 +272,33 @@ function ShotImage({ file, shot, src, style={}, className="", minimal=false, hov
   const _src  = src || (file && file.previewUrl) || (_shot && getShotPreviewUrl(_shot));
   const aw = (_shot && _shot.aw) || 4;
   const ah = (_shot && _shot.ah) || 5;
+  const [loaded, setLoaded] = useState(false);
+  const imgRef = useRef(null);
+
+  // If the browser already has the image cached, `load` may fire before we
+  // attach the handler — check on mount.
+  useEffect(() => {
+    if(imgRef.current && imgRef.current.complete && imgRef.current.naturalWidth){
+      setLoaded(true);
+    }
+  }, [_src]);
+
   if(!_src){
     return <Placeholder shot={_shot} style={style} className={className} minimal={minimal} hoverable={hoverable}/>;
   }
   return (
-    <div className={className} style={{
+    <div className={`${className} shot-img${loaded ? " is-loaded" : ""}`} style={{
       position:"relative", overflow:"hidden",
+      aspectRatio: loaded ? undefined : `${aw}/${ah}`,
       background:"#0c0a08",
       ...style,
     }}>
-      <img src={_src} alt={alt || (_shot && _shot.label) || ""}
+      <img ref={imgRef} src={_src} alt={alt || (_shot && _shot.label) || ""}
+        onLoad={() => setLoaded(true)}
+        onError={() => setLoaded(true)}
         style={{width:"100%", height:"auto", display:"block",
+          opacity: loaded ? 1 : 0,
+          transition:"opacity .45s ease",
           filter:"contrast(1.04) saturate(0.92)"}}/>
       {accent && (
         <span style={{
