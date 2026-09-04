@@ -1,40 +1,50 @@
-# Gates: hero regression + sidebar reveal + alt-text note
+# Gates: responsive pass — iMac to phone
 
 OWNS: src/**, index.html, tools/**
 
-Scope: restore the intro hero image (broken by the webp rename), make the left
-rail reveal its contents only once the panel has finished widening instead of
-reflowing in view, and record the alt-text problem for a later pass.
+Scope: the layout only worked around 1440. Give it a content ceiling so a 5K
+iMac does not stretch text and images edge to edge, scale the rail and gutters
+with the viewport, drop the gallery to 2 columns on phones instead of 104px
+thumbnails, and replace the intro's slide-up (which flashes a white gap) with a
+cross-fade.
 
-- [x] G1: no source file references a raster image path that no longer exists
-  CHECK: node tools/verify-assets.mjs refs
-  EXPECT: REFS_OK
-  EVIDENCE: REFS_OK — verify-assets.mjs refs; fails when hero_bw.jpg is restored
+- [ ] G1: content column is capped and centred; on a 2560px viewport the work
+       section content is <= 1600px wide, not ~2250px
+  CHECK: node tools/verify-responsive.mjs ceiling
+  EXPECT: CEILING_OK
+  EVIDENCE: pending
 
-- [x] G2: the intro hero background resolves (200, image content-type) on the live site
-  CHECK: node tools/verify-assets.mjs herolive
-  EXPECT: HEROLIVE_OK
-  EVIDENCE: HEROLIVE_OK — live images/hero_bw.webp -> 200 image/webp
+- [ ] G2: rail width and section gutters scale with the viewport (clamp/fluid),
+       not a single fixed px value
+  CHECK: node tools/verify-responsive.mjs fluid
+  EXPECT: FLUID_OK
+  EVIDENCE: pending
 
-- [x] G3: rail content hidden until width settles then fades in; collapse hides at once
-  CHECK: node tools/verify-assets.mjs reveal
-  EXPECT: REVEAL_OK
-  EVIDENCE: REVEAL_OK — width .4s, reveal delayed .42s, collapse immediate; visibility:hidden during reflow
+- [ ] G3: gallery shows 2 columns at <= 700px wide, 3+ above
+  CHECK: node tools/verify-responsive.mjs gallerycols
+  EXPECT: GALLERYCOLS_OK
+  EVIDENCE: pending
 
-- [x] G4: nothing regressed — payload, blur-up, a11y, type scale still hold
-  CHECK: node tools/verify-build.mjs payload && node tools/verify-build.mjs blurup && node tools/verify-build.mjs a11y && node tools/verify-type.mjs scale
-  EXPECT: SCALE_OK
-  EVIDENCE: PAYLOAD_OK / BLURUP_OK / A11Y_OK / SCALE_OK all still green
+- [ ] G4: no horizontal scroll and no clipped heading at 360, 390, 768, 1024,
+       1440, 1920, 2560
+  CHECK: node tools/verify-responsive.mjs breakpoints
+  EXPECT: BREAKPOINTS_OK
+  EVIDENCE: pending
 
-- [x] G5: the alt-text defect is written down where the next session will see it
-  CHECK: node tools/verify-assets.mjs altnote
-  EXPECT: ALTNOTE_OK
-  EVIDENCE: ALTNOTE_OK — recorded in OWNER_NOTES.md Open issues
+- [ ] G5: the intro reveals by cross-fade, no slide, no white gap on exit
+  CHECK: node tools/verify-responsive.mjs introfade
+  EXPECT: INTROFADE_OK
+  EVIDENCE: pending
 
-- [x] G6: live deploy serves the fix, hero renders, gallery renders
+- [ ] G6: nothing regressed — payload, blur-up, motion, a11y, type scale, eyebrow
+  CHECK: node tools/verify-build.mjs payload && node tools/verify-build.mjs blurup && node tools/verify-build.mjs a11y && node tools/verify-type.mjs scale && node tools/verify-type.mjs eyebrow
+  EXPECT: EYEBROW_OK
+  EVIDENCE: pending
+
+- [ ] G7: live deploy serves it and renders clean at 2560 and at 375
   CHECK: node tools/verify-build.mjs live
   EXPECT: LIVE_OK
-  EVIDENCE: LIVE_OK — live v16, 126 placeholders, gallery + hero render
+  EVIDENCE: pending
 
-- [x] G7: visual review — hero image back, rail reveal is smooth at desktop
-  EVIDENCE: hero image confirmed in live screenshot; rail collapse path confirmed active (.12s fast-hide transition string) — harness will not return a fresh post-scroll layout read, documented limitation
+- [ ] G8: visual review at 2560 / 1440 / 1024 / 768 / 390 — reads as designed at each
+  EVIDENCE: pending

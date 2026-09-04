@@ -24,8 +24,12 @@
     --serif:"DM Sans", Helvetica, Arial, sans-serif;
     --sans:"DM Sans", Helvetica, Arial, sans-serif;
     --mono:"Geist Mono", ui-monospace, Menlo, monospace;
-    --rail-w: 300px;
-    --pad: 40px;
+    /* Rail and gutters scale with the viewport instead of sitting at one fixed
+       size that looks huge on a phone and lost on a 5K iMac. */
+    --rail-w: clamp(256px, 20vw, 380px);
+    --pad: clamp(20px, 4.5vw, 104px);
+    /* The content column never gets wider than this, no matter the screen. */
+    --content-max: 1500px;
     --grain-opacity: .045;
 
     /* Type scale. Six steps, each a deliberate jump — the page had nine
@@ -100,7 +104,12 @@
   /* One rhythm for every section instead of per-section padding. The first
      section opens tighter: this is a portfolio, so the work has to reach the
      first screen rather than sit below a lobby of whitespace. */
-  .section{padding-block:var(--s-7) var(--s-6)}
+  .section{
+    padding-block:var(--s-7) var(--s-6);
+    padding-inline:var(--pad);
+    max-width:calc(var(--content-max) + 2*var(--pad));
+    margin-inline:auto;   /* centre the content column in the space beside the rail */
+  }
   .section + .section{padding-block-start:var(--s-6)}
   main > .section:first-child{padding-block-start:var(--s-5)}
   @media (max-width:760px){ .section{padding-block:var(--s-5) var(--s-5)} }
@@ -295,12 +304,14 @@
   ::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:8px}
   ::-webkit-scrollbar-track{background:transparent}
 
-  /* ---------- Responsive ---------- */
+  /* ---------- Responsive ----------
+     --rail-w / --pad are fluid clamps on :root. Only two hard overrides:
+     a slightly tighter rail on laptop widths, and the drawer at <=860. */
   @media (max-width: 1100px){
-    :root{ --rail-w: 240px; --pad: 28px; }
+    :root{ --rail-w: clamp(216px, 22vw, 256px); }
   }
   @media (max-width: 860px){
-    :root{ --rail-w: 0px; --pad: 20px; }
+    :root{ --rail-w: 0px; }
     /* rail becomes an off-canvas drawer; hamburger toggles it */
     main{ margin-left:0 !important; margin-right:0 !important; padding-top:64px }
     .mobile-menu-btn{ display:flex !important }
@@ -378,19 +389,19 @@
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
 <!-- tweaks shell -->
-<script type="text/babel" src="src/tweaks-panel.jsx?v=16"></script>
+<script type="text/babel" src="src/tweaks-panel.jsx?v=17"></script>
 
 <!-- App pieces -->
-<script type="text/babel" src="src/data.jsx?v=16"></script>
-<script type="text/babel" src="src/placeholder.jsx?v=16"></script>
-<script type="text/babel" src="src/sidebar.jsx?v=16"></script>
-<script type="text/babel" src="src/intro.jsx?v=16"></script>
-<script type="text/babel" src="src/hero.jsx?v=16"></script>
-<script type="text/babel" src="src/about.jsx?v=16"></script>
-<script type="text/babel" src="src/gallery.jsx?v=16"></script>
-<script type="text/babel" src="src/contact.jsx?v=16"></script>
-<script type="text/babel" src="src/tweaks.jsx?v=16"></script>
-<script type="text/babel" src="src/app.jsx?v=16"></script>
+<script type="text/babel" src="src/data.jsx?v=17"></script>
+<script type="text/babel" src="src/placeholder.jsx?v=17"></script>
+<script type="text/babel" src="src/sidebar.jsx?v=17"></script>
+<script type="text/babel" src="src/intro.jsx?v=17"></script>
+<script type="text/babel" src="src/hero.jsx?v=17"></script>
+<script type="text/babel" src="src/about.jsx?v=17"></script>
+<script type="text/babel" src="src/gallery.jsx?v=17"></script>
+<script type="text/babel" src="src/contact.jsx?v=17"></script>
+<script type="text/babel" src="src/tweaks.jsx?v=17"></script>
+<script type="text/babel" src="src/app.jsx?v=17"></script>
 
 <script>
   // Persistable tweak defaults

@@ -76,10 +76,25 @@ function CategoryGalleries({ tweaks }){
   );
 }
 
+// The gallery column count follows the viewport, not just the density tweak:
+// 3+ on a desktop, 2 on a tablet, 2 on a phone (a photographer's grid at one
+// column is too sparse; at three, phone thumbnails were ~104px).
+function useGalleryCols(density){
+  const base = density === "compact" ? 4 : density === "loose" ? 2 : 3;
+  const pick = (w) => w <= 700 ? Math.min(base, 2) : w <= 1100 ? Math.min(base, 3) : base;
+  const [cols, setCols] = _gus(() => pick(typeof window !== "undefined" ? window.innerWidth : 1440));
+  _gue(() => {
+    const on = () => setCols(pick(window.innerWidth));
+    window.addEventListener("resize", on, { passive: true });
+    return () => window.removeEventListener("resize", on);
+  }, [density]);
+  return cols;
+}
+
 function CategoryBlock({ cat, idx, density, onOpen }){
+  const cols = useGalleryCols(density);
   const shots = window.ALL_SHOTS.filter(s => s.cat === cat.id);
   if (!shots.length) return null;
-  const cols = density === "compact" ? 4 : density === "loose" ? 2 : 3;
   const ratios = shots.map(s => (s.ah || 5) / (s.aw || 4));
   return (
     <div className="cat-block">

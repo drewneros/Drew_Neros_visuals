@@ -57,8 +57,16 @@ function Intro({ tweaks, onDone }){
         position:"fixed", inset:0, zIndex:500,
         overflow:"hidden",
         background:"#0c0c0a",
-        transform: isExit ? "translateY(-100%)" : "translateY(0)",
-        transition: isExit ? "transform .9s cubic-bezier(.4,0,.2,1)" : "none",
+        /* Exit is a cross-fade, not a slide. The old translateY(-100%) revealed
+           the top of <main> before its content — a white band beside the fixed
+           rail — for the length of the animation. The gallery is already
+           rendered behind this at full opacity, so fading out just shows it. */
+        opacity: isExit ? 0 : 1,
+        transform: isExit ? "scale(1.04)" : "scale(1)",
+        transition: isExit
+          ? "opacity .7s ease, transform 1.1s cubic-bezier(.4,0,.2,1)"
+          : "none",
+        pointerEvents: isExit ? "none" : "auto",
         cursor: phase === "ready" ? "n-resize" : "default",
       }}
     >
@@ -126,7 +134,7 @@ function Intro({ tweaks, onDone }){
       }}>
         <h1 className="display italic" style={{
           margin:0,
-          fontSize:"clamp(72px, 13vw, 220px)",
+          fontSize:"clamp(40px, 12vw, 216px)",
           color:"#F4F1EA",
           fontWeight:500,
           letterSpacing:"-0.05em",
