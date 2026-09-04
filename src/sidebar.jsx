@@ -208,12 +208,20 @@ function Sidebar({ tweaks, setTweak, onNav, current, onOpenAdmin, slideIn = true
         </span>
       </div>
 
-      {/* Full rail content — fades out when collapsed */}
+      {/* Full rail content. The panel widens over .4s; if the text fades in at
+          the same time you watch it reflow and rewrap at 56px width first.
+          So: hold it hidden, and only fade in after the width has settled
+          (delay ~= width duration). Collapsing hides it at once — no delay on
+          the way out. `visibility` keeps the mid-transition reflow off-screen
+          instead of just transparent. */}
       <div style={{
         display:"flex", flexDirection:"column", flex:"1 1 auto", minHeight:0,
         opacity: collapsed ? 0 : 1,
+        visibility: collapsed ? "hidden" : "visible",
         pointerEvents: collapsed ? "none" : "auto",
-        transition:"opacity .2s ease",
+        transition: collapsed
+          ? "opacity .12s ease, visibility 0s linear .12s"
+          : "opacity .26s ease .42s, visibility 0s linear .42s",
       }}>
       {/* Pinned-open: small control to re-collapse (desktop, scrolled) */}
       {!isMobile && pinned && scrolled && (

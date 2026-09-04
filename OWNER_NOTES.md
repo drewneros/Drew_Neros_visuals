@@ -1,5 +1,23 @@
 # Drew Neros Visuals — Owner Notes
 
+## Open issues
+
+### Alt text is wrong (fix in a dedicated pass)
+The gallery lightbox shows "AI-generated alt text" that is **fiction**.
+`generateAlt(shot)` in `src/gallery.jsx` returns a RANDOM sentence from a
+hardcoded per-category list, with no connection to the actual photo. Grid
+`<img alt>` just uses the shot `label` ("Portrait", "Moevir Magazine Aug 2024").
+Correct fix: a real per-shot `alt:` string on every row in `src/data.jsx`
+(126 of them), either written by hand or generated once against the real image
+and baked in like the `lqip:` placeholders were. Until then the lightbox
+alt-text panel should probably be hidden rather than shown wrong.
+
+### Portrait in the About / "Drew_Neros." section
+`PortraitSlot` reads `localStorage["drew.portrait.dataurl"]` and falls back to a
+placeholder. It is per-browser, so it vanishes on any new device or cleared
+storage. To make it permanent, commit an actual portrait file to `images/` and
+point `PortraitSlot` at it instead of localStorage.
+
 ## Live site
 **https://nerosvisuals.netlify.app**
 

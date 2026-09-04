@@ -70,7 +70,7 @@ function Intro({ tweaks, onDone }){
       }}>
         <div style={{
           position:"absolute", inset:0,
-          backgroundImage:"url('images/hero_bw.jpg')",
+          backgroundImage:"url('images/hero_bw.webp')",
           backgroundSize:"cover",
           backgroundPosition:"center center",
           backgroundRepeat:"no-repeat",
